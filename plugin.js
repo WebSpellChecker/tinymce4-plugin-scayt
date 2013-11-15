@@ -1296,7 +1296,7 @@
 			},
 			getVersion: function(editor) {
 				var scayt_instance = this.getScayt( editor );
-				return scayt_instance.getVersion();
+				return '3.0.0';
 			},
 			removeMarkupFromWord: function(editor) {
 				var self = this,
