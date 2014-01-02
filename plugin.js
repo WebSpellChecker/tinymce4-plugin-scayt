@@ -1386,7 +1386,7 @@
 				var _SCAYT = tinymce.plugins.SCAYT,
 					scaytInstance = _SCAYT.getScayt(editor);
 
-				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2013 SpellChecker.net, All Rights Reserved.") +'</div>';
+				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2014 SpellChecker.net, All Rights Reserved.") +'</div>';
 			}
 		};
 

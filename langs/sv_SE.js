@@ -34,7 +34,7 @@
 
 	about_version: "Version",
 	about_version_num: "3.0.0",
-	about_throwt_copy: "&copy; 1999-2013 SpellChecker.net, Inc.<br> All Rights Reserved.",
+	about_throwt_copy: "&copy; <a style='text-decoration: underline;cursor:pointer;color:#00f' href='http://www.webspellchecker.net/' target='_blank'>1999-2014 SpellChecker.net, Inc.</a><br />All Rights Reserved.",
 	about_help: "SCAYT help",
 	
 	dic_dictionary_name: "Ordlistans namn",
