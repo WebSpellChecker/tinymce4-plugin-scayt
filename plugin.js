@@ -1134,7 +1134,7 @@
 			},
 			aboutTemplate: function() {
 				var scayt_instance = scayt.getScayt(editor);
-				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scayt_instance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scayt_instance.getLocal('version') + scayt.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2013 SpellChecker.net, All Rights Reserved.") +'</div>';
+				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scayt_instance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scayt_instance.getLocal('version') + scayt.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2014 SpellChecker.net, All Rights Reserved.") +'</div>';
 			}
 		};
 
