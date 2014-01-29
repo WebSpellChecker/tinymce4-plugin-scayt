@@ -673,12 +673,12 @@
 					}
 
 					self.menu.moveTo(self.pos.x, self.pos.y);
-
-					ed.on('remove', function() {
-						self.menu.remove();
-						self.menu = null;
+					
+					self.menu.on('cancel', function() {
+						this.remove();
+						this.menu = null;
 					});
-
+					
 					return false;
 				});
 			}
