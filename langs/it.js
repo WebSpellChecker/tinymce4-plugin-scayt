@@ -5,7 +5,8 @@
 	desc:'Controllo Ortografico Mentre Scrivi',
 
 	cm_more_suggestions: 'Altri suggerimenti',
-	cm_add_word:'Aggiungi Parola',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Aggiungi Parola',
 	cm_ignore_word:'Ignora',
 	cm_ignore_all: 'Ignora tutti',
 	cm_about: 'About SCAYT',
@@ -15,7 +16,7 @@
 	tb_menu_dictionaries: 'Dizionari',
 	tb_menu_about: 'About COMS',
 
-	tb_button_title_enable: 'Abilita COMS', 
+	tb_button_title_enable: 'Abilita COMS',
 	tb_button_title_disable: 'Disabilita COMS',
 
 	tab_options : 'Opzioni',
@@ -26,7 +27,7 @@
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Ignora Parole in maiuscolo",
 	label_ignoreDomainNames: "Ignora nomi di dominio",
 	label_mixedCase: "Ignora parole con maiuscole e minuscole",
@@ -36,7 +37,7 @@
 	about_version_num: "3.0.0",
 	about_throwt_copy: "&copy; <a style='text-decoration: underline;cursor:pointer;color:#00f' href='http://www.webspellchecker.net/' target='_blank'>1999-2014 SpellChecker.net, Inc.</a><br />All Rights Reserved.",
 	about_help: "SCAYT help",
-	
+
 	dic_dictionary_name: "Dictionary Name",
 	dic_about_info: "Inizialmente il dizionario utente è memorizzato in un Cookie. I Cookie però hanno una dimensioni massima limitata. Quando il dizionario utente creasce a tal punto da non poter più essere memorizzato in un Cookie, allora il dizionario può essere memorizzato sul nostro server. Per memorizzare il proprio dizionario personale sul nostro server, è necessario specificare un nome per il proprio dizionario. Se avete già memorizzato un dizionario, inserite il nome che gli avete dato e premete il pulsante Ripristina.",
 	dic_create: "Crea",

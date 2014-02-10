@@ -5,7 +5,8 @@
 	desc:'Rechtschreibprüfung während der Texteingabe (SCAYT)',
 
 	cm_more_suggestions: 'Mehr Vorschläge',
-	cm_add_word:'Wort hinzufügen',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Wort hinzufügen',
 	cm_ignore_word:'Ignorieren',
 	cm_ignore_all: 'Alle ignorieren',
 	cm_about: 'Über SCAYT',
@@ -15,7 +16,7 @@
 	tb_menu_dictionaries: 'SCAYT Wörterbücher',
 	tb_menu_about: 'Über SCAYT',
 
-	tb_button_title_enable: 'SCAYT einschalten', 
+	tb_button_title_enable: 'SCAYT einschalten',
 	tb_button_title_disable: 'SCAYT ausschalten',
 
 	tab_options : 'Optionen',
@@ -26,7 +27,7 @@
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Groß geschriebenen Wörter ignorieren",
 	label_ignoreDomainNames: "Domain-Namen ignorieren",
 	label_mixedCase: "Wörter mit gemischte Setzkasten ignorieren",
@@ -36,7 +37,7 @@
 	about_throwt_copy: "&copy; <a style='text-decoration: underline;cursor:pointer;color:#00f' href='http://www.webspellchecker.net/' target='_blank'>1999-2014 SpellChecker.net, Inc.</a><br />All Rights Reserved.",
 	about_version_num: "3.0.0",
 	about_help: "SCAYT help",
-	
+
 	dic_dictionary_name: "Wörterbuchname",
 	dic_about_info: "Anfangs wird das Benutzerwörterbuch in einem Cookie gespeichert. Allerdings sind Cookies in der Größe begrenzt. Wenn das Benutzerwörterbuch bis zu einem Punkt wächst, wo es nicht mehr in einem Cookie gespeichert werden kann, wird das Benutzerwörterbuch auf dem Server gespeichert. Um Ihr persönliches Wörterbuch auf dem Server zu speichern, müssen Sie einen Namen für das Wörterbuch angeben. Falls  Sie schon ein gespeicherte Wörterbuch haben, geben Sie bitte dessen Namen ein und klicken Sie auf die Schaltfläche Wiederherstellen.",
 	dic_create: "Erzeugen",

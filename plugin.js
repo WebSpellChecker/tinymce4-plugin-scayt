@@ -125,7 +125,7 @@
 				if(_editor.getParam('scayt_servicePath')) {
 					_scaytInstanceOptions['service_path'] = _editor.getParam('scayt_servicePath');
 				}
-				
+
 				var scaytInstance = new SCAYT.TINYMCE(_scaytInstanceOptions,
 					function() {
 						// success callback
@@ -319,6 +319,7 @@
 				settings.scayt_autoStartup = getParameter('scayt_autoStartup');
 				settings.scayt_customerId = editor.getParam('scayt_customerId');
 				settings.scayt_moreSuggestions = isAllowable("scayt_moreSuggestions") ? getParameter("scayt_moreSuggestions") : "off";
+				settings.scayt_maxSuggestions = utils.isNegative(getParameter('scayt_maxSuggestions')) ? optionDefinition['scayt_maxSuggestions']['default'] : getParameter('scayt_maxSuggestions');
 				settings.scayt_srcUrl = getParameter('scayt_srcUrl');
 				settings.scayt_sLang = getParameter('scayt_sLang');
 
@@ -328,6 +329,15 @@
 				settings.scayt_serviceHost = getParameter('scayt_serviceHost');
 				settings.scayt_servicePort = getParameter('scayt_servicePort');
 				settings.scayt_servicePath = getParameter('scayt_servicePath');
+
+				settings.scayt_contextCommands = utils.getParameter('scayt_contextCommands');
+				if(settings.scayt_contextCommands === 'all') {
+					settings.scayt_contextCommands = optionDefinition['scayt_contextCommands']['default'];
+				} else if(settings.scayt_contextCommands === 'off') {
+					settings.scayt_contextCommands = '';
+				} else {
+					settings.scayt_contextCommands = settings.scayt_contextCommands.replace(/\s?[\|]+/gi, ' ');
+				}
 
 				settings.scayt_contextMenuItemsOrder = getParameter('scayt_contextMenuItemsOrder');
 				settings.scayt_contextMenuItemsOrder = settings.scayt_contextMenuItemsOrder.replace(/\s?[\|]+/g, ' ');
@@ -370,7 +380,7 @@
 					var scaytInstance = _SCAYT.getScayt(ed),
 						button = toolbarButton.scaytButton,
 						menu = toolbarButton.scaytButton.menu;
-		
+
 					if(scaytInstance) {
 						_SCAYT.destroy(editor);
 						button.active(false);
@@ -502,7 +512,7 @@
 					scaytPluginState = _SCAYT.setState(editor, !_SCAYT.getState(editor)),
 					button = this.scaytButton,
 					menu = this.scaytButton.menu;
-				
+
 				if(scaytPluginState) {
 					_SCAYT.create(editor);
 					button.active(true);
@@ -578,13 +588,15 @@
 					scaytInstance = null,
 					word = null,
 					wrapMenu = null,
+					allSuggestions,
 					suggestions,
 					moreSuggestions,
-					needSuggestions,
-					maxSuggestions = settings.scayt_maxSuggestions = utils.isNegative(utils.getParameter('scayt_maxSuggestions')) ? options.definitionDefaultOption['scayt_maxSuggestions']['default'] : utils.getParameter('scayt_maxSuggestions');
+					needMoreSuggestions,
+					maxSuggestions = settings.scayt_maxSuggestions;
 
 				ed.on('contextmenu', function(e) {
 					e.preventDefault();
+
 					if(!!editor.settings.readonly) {
 						return;
 					}
@@ -598,27 +610,27 @@
 
 					scaytInstance.fire("getSuggestionsList", {lang: _SCAYT.getCurrentLanguage(ed), word: word});
 
-					suggestions = _SCAYT.getSuggestions().slice(0, maxSuggestions);
-					moreSuggestions = _SCAYT.getSuggestions().slice(maxSuggestions, 15);
 
-					needSuggestions = settings.scayt_moreSuggestions !== 'on' ? false : suggestions[0] == 'no_any_suggestions' || moreSuggestions[0] == 'no_any_suggestions' ? false : ' moreSuggestions';
+					// Get all suggestions
+					allSuggestions = _SCAYT.getSuggestions();
+					// Split suggestions items into 'Suggestions' and 'More suggestions' menu items
+					suggestions = allSuggestions.slice(0, maxSuggestions);
+					moreSuggestions = allSuggestions.slice(maxSuggestions, 15);
+
+					// Do we need 'More suggestions' menu item ?
+					if(settings.scayt_moreSuggestions === 'on' && moreSuggestions.length > 0 && moreSuggestions[0] != 'no_any_suggestions') {
+						needMoreSuggestions = true;
+					} else {
+						needMoreSuggestions = false;
+					}
 
 					utils.generateMenuItemsForSuggestion(suggestions);
 					utils.generateMoreSuggestionsItem(moreSuggestions);
 					utils.registerControlItems();
 
-					settings.scayt_contextCommands = utils.getParameter('scayt_contextCommands');
-					if(settings.scayt_contextCommands === "all") {
-						settings.scayt_contextCommands = options.definitionDefaultOption['scayt_contextCommands']['default'];
-					} else if(settings.scayt_contextCommands === "off") {
-						settings.scayt_contextCommands = "";
-					} else {
-						settings.scayt_contextCommands = settings.scayt_contextCommands.replace(/\s?[\|]+/gi, ' ');
-					}
-
 					var control = settings.scayt_contextCommands + ' | aboutscayt |',
-						suggest = suggestions.join(" ") + ' | ',
-						moresuggest = !needSuggestions ? '' : needSuggestions + ' | ';
+						suggest = (suggestions.length > 0 ? suggestions.join(' ') : (needMoreSuggestions || allSuggestions.length > 0 ? '' : 'no_any_suggestions')) + ' | ',
+						moresuggest = needMoreSuggestions ? (' moreSuggestions' + ' | ') : '';
 
 					self.contextmenu = settings.scayt_contextMenuItemsOrder.replace('control', control).replace('moresuggest', moresuggest).replace('suggest', suggest);
 					self.contextmenu = editor.settings.contextmenu.replace('scayt', self.contextmenu);
@@ -646,7 +658,7 @@
 							}
 						}
 					}
-				
+
 					self.menu = new tinymce.ui.Menu({
 						items: self.items,
 						context: 'scayt',
@@ -675,7 +687,7 @@
 							menuEl.style.overflow = 'inherit';
 						}
 					}
-					
+
 					wrapMenu = '#' + self.menu._id;
 
 					scaytInstance.showBanner(wrapMenu);
@@ -691,12 +703,12 @@
 					}
 
 					self.menu.moveTo(self.pos.x, self.pos.y);
-					
+
 					self.menu.on('cancel', function() {
 						this.remove();
 						this.menu = null;
 					});
-					
+
 					return false;
 				});
 			}
@@ -774,11 +786,20 @@
 			generateMenuItemsForSuggestion: function(suggestions /*Array*/) {
 				var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
 
-				for(var i = 0; i < suggestions.length; i++) {
-					this.registerMenuItem(suggestions[i], {
-						text: suggestions[i],
-						onclick: this.generateReplaceCommand(scaytInstance, suggestions[i])
+				if(suggestions.length === 0 || suggestions[0] === 'no_any_suggestions') {
+					this.registerMenuItem('no_any_suggestions', {
+						text: utils.getLang('no_any_suggestions', 'No suggestions'),
+						onclick: function() {
+							return false;
+						}
 					});
+				} else {
+					for(var i = 0; i < suggestions.length; i++) {
+						this.registerMenuItem(suggestions[i], {
+							text: suggestions[i],
+							onclick: this.generateReplaceCommand(scaytInstance, suggestions[i])
+						});
+					}
 				}
 			},
 			generateSubMenuForMoreSuggestions: function(suggestions /*Array*/) {
@@ -796,18 +817,21 @@
 			},
 			generateMoreSuggestionsItem: function(suggestions /*Array*/) {
 				var self = this,
+					moreSuggestionsSubMenu,
 					listItem;
 
-				if(self.generateSubMenuForMoreSuggestions(suggestions)[0] && self.generateSubMenuForMoreSuggestions(suggestions)[0].text) {
-					listItem = self.generateSubMenuForMoreSuggestions(suggestions)[0].text == 'no_any_suggestions' ? null : self.generateSubMenuForMoreSuggestions(suggestions);
+				moreSuggestionsSubMenu = self.generateSubMenuForMoreSuggestions(suggestions);
+
+				if(moreSuggestionsSubMenu[0] && moreSuggestionsSubMenu[0].text) {
+					listItem = moreSuggestionsSubMenu[0].text == 'no_any_suggestions' ? null : moreSuggestionsSubMenu;
 				}
 
 				if(listItem == null) {
 					return;
 				}
-					
+
 				editor.addMenuItem('moreSuggestions', {
-					text: utils.getLang('cm_more_suggestions','More suggestions'),
+					text: utils.getLang('cm_more_suggestions', 'More suggestions'),
 					menu: listItem
 				});
 			},
@@ -854,7 +878,7 @@
 				});
 
 				editor.addMenuItem('no_any_suggestions', {
-					text: 'No suggestions',
+					text: utils.getLang('no_any_suggestions', 'No suggestions'),
 					onPostRender: function(data) {
 						data.control.disabled(true);
 					},
@@ -872,7 +896,7 @@
 
 				getToName = function(aLangCode) {
 					var langCode = typeof aLangCode === 'string' ? aLangCode : '"' + aLangCode + '"';
-					
+
 					if(codeList.hasOwnProperty(langCode)) {
 						return codeList[langCode];
 					}
@@ -996,11 +1020,11 @@
 					renderLang,
 					languageList = aLanguages || {},
 					currentLang = aCurrentLanguage || 'en_US';
-				
+
 				this.langState.currentLang = currentLang;
 
 				languageList = utils.registerLanguages.makeLanguageList(languageList);
-				
+
 				for(var langName in languageList) {
 					createCheckbox.push({
 						checked: langName === currentLang ? true : false,
@@ -1169,7 +1193,7 @@
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
 					   }
-						
+
 					}, function(error) {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.setDictionaryName(definitionDialog.getDictionaryName());
@@ -1184,10 +1208,10 @@
 					var suc_massage = utils.getLang('dic_succ_dic_remove', 'The Dictionary %s has been successfully removed');
 
 					scayt_control.removeUserDictionary(definitionDialog.getDictionaryName(), function(response) {
-						
+
 						definitionDialog.resetDictionaryName();
 						definitionDialog.initDictionaryNameAndButtons(definitionDialog.getDictionaryName());
-					   
+
 						if(!response.error) {
 							definitionDialog.setDictionaryButtons();
 							suc_massage = suc_massage.replace("%s" , ('"'+ response.name +'"') );
@@ -1282,7 +1306,7 @@
 											control.parent().fromJSON(items);
 										}
 									}
-									
+
 								}
 							}
 						]
@@ -1374,7 +1398,7 @@
 							titleContainerId = this._id + '-head',
 							titleContainer = document.getElementById(titleContainerId),
 							title = titleContainer.getElementsByTagName('DIV');
-						
+
 						// Create small font for header dialog window
 						for(var i = title.length - 1; i >= 0; i--) {
 							if(title[i].className == 'mce-title') {

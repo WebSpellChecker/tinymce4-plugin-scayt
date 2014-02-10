@@ -5,7 +5,8 @@
 	desc:'Comprobar Ortografía Mientras Escribe',
 
 	cm_more_suggestions: 'Más sugerencias',
-	cm_add_word:'Añadir palabra',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Añadir palabra',
 	cm_ignore_word:'Ignorar',
 	cm_ignore_all: 'Ignorar Todas',
 	cm_about: 'Acerca de Corrector',
@@ -15,7 +16,7 @@
 	tb_menu_dictionaries: 'Diccionarios',
 	tb_menu_about: 'Acerca de Corrector',
 
-	tb_button_title_enable: 'Activar Corrector', 
+	tb_button_title_enable: 'Activar Corrector',
 	tb_button_title_disable: 'Activar Corrector',
 
 	tab_options : 'Opciones',
@@ -26,7 +27,7 @@
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Omitir palabras en MAYUSCULAS",
 	label_ignoreDomainNames: "Omitir nombres de dominio",
 	label_mixedCase: "Ignorar palabras con combinación de mayúsculas y minúsculas",

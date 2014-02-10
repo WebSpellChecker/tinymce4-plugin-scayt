@@ -4,7 +4,8 @@ tinyMCE.addI18n('fr.scayt',{
 	desc:'Vérification de l\'Orthographe en Cours de Frappe (SCAYT)',
 
 	cm_more_suggestions: 'Plus de suggestions',
-	cm_add_word:'Ajouter le mot',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Ajouter le mot',
 	cm_ignore_word:'Ignorer',
 	cm_ignore_all: 'Ignorer Tout',
 	cm_about: 'À propos de SCAYT',
@@ -14,7 +15,7 @@ tinyMCE.addI18n('fr.scayt',{
 	tb_menu_dictionaries: 'Dictionnaires',
 	tb_menu_about: 'À propos de SCAYT',
 
-	tb_button_title_enable: 'Activer SCAYT', 
+	tb_button_title_enable: 'Activer SCAYT',
 	tb_button_title_disable: 'Désactiver SCAYT',
 
 	tab_options : 'Options',
@@ -25,7 +26,7 @@ tinyMCE.addI18n('fr.scayt',{
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Ignorer les mots entierement en majuscules",
 	label_ignoreDomainNames: "Ignorer les noms de domaines",
 	label_mixedCase: "Ignorer les mots à casse multiple",

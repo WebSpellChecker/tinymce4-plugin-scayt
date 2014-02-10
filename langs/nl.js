@@ -5,7 +5,8 @@
 	desc:'Controleer de spelling tijdens het typen',
 
 	cm_more_suggestions: 'Meer suggesties',
-	cm_add_word:'Woord toevoegen',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Woord toevoegen',
 	cm_ignore_word:'Negeren',
 	cm_ignore_all: 'Alles negeren',
 	cm_about: 'Over SCAYT',
@@ -15,7 +16,7 @@
 	tb_menu_dictionaries: 'Woordenboeken',
 	tb_menu_about: 'Over SCAYT',
 
-	tb_button_title_enable: 'SCAYT inschakelen', 
+	tb_button_title_enable: 'SCAYT inschakelen',
 	tb_button_title_disable: 'SCAYT uitschakelen',
 
 	tab_options : 'Opties',
@@ -26,7 +27,7 @@
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Negeer woorden helemaal in hoofdletters",
 	label_ignoreDomainNames: "Negeer domeinnamen",
 	label_mixedCase: "Negeer woorden met hoofd- en kleine letters",
@@ -36,7 +37,7 @@
 	about_version_num: "3.0.0",
 	about_throwt_copy: "&copy; <a style='text-decoration: underline;cursor:pointer;color:#00f' href='http://www.webspellchecker.net/' target='_blank'>1999-2014 SpellChecker.net, Inc.</a><br />All Rights Reserved.",
 	about_help: "SCAYT help",
-	
+
 	dic_dictionary_name: "Naam woordenboek",
 	dic_about_info: "Initieel wordt het gebruikerswoordenboek opgeslagen in een cookie. Cookies zijn echter beperkt in grootte. Zodra het gebruikerswoordenboek het punt bereikt waarop het niet meer in een cookie opgeslagen kan worden, dan wordt het woordenboek op de server opgeslagen. Om je persoonlijke woordenboek op je eigen server op te slaan, moet je een mapnaam opgeven. Indien je al een woordenboek hebt opgeslagen, typ dan de naam en klik op de Terugzetten knop.",
 	dic_create: "Aanmaken",

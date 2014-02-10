@@ -6,7 +6,7 @@ tinyMCE.addI18n('en.scayt',{
 
 	cm_more_suggestions: 'More Suggestions',
 	no_any_suggestions: 'No suggestions',
-	cm_add_word:'Add word',  
+	cm_add_word:'Add word',
 	cm_ignore_word:'Ignore word',
 	cm_ignore_all: 'Ignore all words',
 	cm_about: 'About SCAYT',
@@ -16,7 +16,7 @@ tinyMCE.addI18n('en.scayt',{
 	tb_menu_dictionaries: 'SCAYT Dictionaries',
 	tb_menu_about: 'About SCAYT',
 
-	tb_button_title_enable: 'Start SpellCheckAsYouType', 
+	tb_button_title_enable: 'Start SpellCheckAsYouType',
 	tb_button_title_disable: 'Stop SpellCheckAsYouType',
 
 	tab_options : 'Options',
@@ -27,7 +27,7 @@ tinyMCE.addI18n('en.scayt',{
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to continue.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Ignore All-Caps Words",
 	label_ignoreDomainNames: "Ignore Domain Names",
 	label_mixedCase: "Ignore Mixed-Case Words",
@@ -51,5 +51,5 @@ tinyMCE.addI18n('en.scayt',{
 	dic_err_dic_delete: "The Dictionary %s cannot be removed",
 	dic_succ_dic_delete: "The Dictionary %s has been successfully removed",
 	dic_err_dic_restore: "The Dictionary %s cannot be restored",
-	dic_succ_dic_restore: "The Dictionary %s has been successfully restored"	
+	dic_succ_dic_restore: "The Dictionary %s has been successfully restored"
 });
