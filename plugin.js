@@ -364,13 +364,15 @@
 				var contentDomReady = function(editor) {
 					var button = toolbarButton.scaytButton;
 
-					// The event are fired when editable iframe node was reinited so we should restart our service
-					if(_SCAYT.getState(editor) === true && !editor.settings.readonly) {
-						_SCAYT.create(editor);
-						if(button) {
-							button.active(true);
+					if(!editor.settings.readonly) {
+						// The event are fired when editable iframe node was reinited so we should restart our service
+						if(_SCAYT.getState(editor) === true) {
+							_SCAYT.create(editor);
+							if(button) {
+								button.active(true);
+							}
+							contextMenu.create(editor);
 						}
-						contextMenu.create(editor);
 					} else {
 						if(button) {
 							button.disabled(true);
