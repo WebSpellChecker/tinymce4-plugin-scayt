@@ -313,9 +313,6 @@
 					getParameter = utils.getParameter,
 					isAllowable = utils.isAllowable;
 
-				// preprocess settings for backward compatibility
-				_SCAYT.replaceOldOptionsNames(settings);
-
 				settings.scayt_autoStartup = getParameter('scayt_autoStartup');
 				settings.scayt_customerId = editor.getParam('scayt_customerId');
 				settings.scayt_moreSuggestions = isAllowable("scayt_moreSuggestions") ? getParameter("scayt_moreSuggestions") : "off";
@@ -1440,6 +1437,9 @@
 				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" target="_blank" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2014 SpellChecker.net, All Rights Reserved.") +'</div>';
 			}
 		};
+
+		// preprocess settings for backward compatibility
+		tinymce.plugins.SCAYT.replaceOldOptionsNames(editor.settings);
 
 		toolbarButton.init(editor);
 		contextMenu.createScaytMenuItem();
