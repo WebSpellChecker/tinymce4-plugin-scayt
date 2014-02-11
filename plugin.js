@@ -365,25 +365,31 @@
 
 				//@TODO: find solution for inline support
 				var contentDomReady = function(editor) {
-					var button = toolbarButton.scaytButton,
-						menu = toolbarButton.scaytButton.menu;
+					var button = toolbarButton.scaytButton;
 
 					// The event are fired when editable iframe node was reinited so we should restart our service
-					if(_SCAYT.getState(editor) === true) {
+					if(_SCAYT.getState(editor) === true && !editor.settings.readonly) {
 						_SCAYT.create(editor);
-						button.active(true);
+						if(button) {
+							button.active(true);
+						}
 						contextMenu.create(editor);
+					} else {
+						if(button) {
+							button.disabled(true);
+						}
 					}
 				};
 
 				var scaytDestroy = function(editor) {
 					var scaytInstance = _SCAYT.getScayt(ed),
-						button = toolbarButton.scaytButton,
-						menu = toolbarButton.scaytButton.menu;
+						button = toolbarButton.scaytButton;
 
 					if(scaytInstance) {
 						_SCAYT.destroy(editor);
-						button.active(false);
+						if(button) {
+							button.active(false);
+						}
 						contextMenu.destroy(editor);
 					}
 				};
@@ -394,12 +400,15 @@
 					ed.on('focusin', function(e) {
 						var button = toolbarButton.scaytButton;
 
-						button.disabled(true);
+						if(button) {
+							button.disabled(true);
+						}
 					});
 				} else {
 					// Initialization the tinymce editor
 					ed.on('init', function(e) {
 						var editor = e.target;
+
 						contentDomReady(editor);
 					});
 				}
