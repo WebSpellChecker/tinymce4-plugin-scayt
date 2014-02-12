@@ -75,7 +75,7 @@
 					for(var i = 0; i < loadingHelper.loadOrder.length; i++) {
 						editorName = loadingHelper.loadOrder[i];
 
-						tinymce.plugins.SCAYT.fireOnce(tinymce.editors[editorName], 'onScaytReady');
+						tinymce.plugins.SCAYT.fireOnce(tinymce, 'onScaytReady');
 
 						if(typeof loadingHelper[editorName] === 'function') {
 							loadingHelper[editorName](tinymce.editors[editorName]);
@@ -86,7 +86,7 @@
 					loadingHelper.loadOrder = [];
 				});
 			} else if(window.SCAYT && typeof window.SCAYT.TINYMCE === 'function') {
-				tinymce.plugins.SCAYT.fireOnce(editor, 'onScaytReady');
+				tinymce.plugins.SCAYT.fireOnce(tinymce, 'onScaytReady');
 
 				if(!tinymce.plugins.SCAYT.getScayt(tinymce.editors[editor.id])) {
 					if(typeof callback === 'function') {
@@ -214,10 +214,10 @@
 			replaceOldOptionsNames: function(config) {
 				replaceOldOptionsNames(config);
 			},
-			fireOnce: function(editor, event) {
-				if(!editor['uniqueEvtKey_' + event]) {
-					editor['uniqueEvtKey_' + event] = true;
-					editor.fire(event);
+			fireOnce: function(obj, event) {
+				if(!obj['uniqueEvtKey_' + event]) {
+					obj['uniqueEvtKey_' + event] = true;
+					obj.fire(event);
 				}
 			},
 			executeOnce: function(editor, event, handler) {
@@ -1445,5 +1445,24 @@
 
 		toolbarButton.init(editor);
 		contextMenu.createScaytMenuItem();
+	});
+
+	// Handle 'onScaytReady' callback
+	tinymce.on('onScaytReady', function(editor) {
+		// override editor dirty checking behaviour
+		tinymce.EditorManager.Editor.prototype.isDirty = function() {
+			var scaytInstance = tinymce.plugins.SCAYT.getScayt(this),
+				startContent, getContent;
+
+			if(scaytInstance) {
+				startContent = tinymce.trim(scaytInstance.removeMarkupFromString(this.startContent));
+				getContent = tinymce.trim(scaytInstance.removeMarkupFromString(this.getContent({format : 'raw', no_events : 1})));
+			} else {
+				startContent = tinymce.trim(this.startContent);
+				getContent = tinymce.trim(this.getContent({format : 'raw', no_events : 1}));
+			}
+
+			return (getContent != startContent) && !this.isNotDirty;
+		}
 	});
 }());
