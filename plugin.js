@@ -25,6 +25,10 @@
 			loadingHelper = {
 				loadOrder: []
 			},
+
+			// look at multiload app realization
+			scriptLoader = new tinymce.dom.ScriptLoader(),
+
 			dataAttributeName = 'data-scayt-word',
 			misspelledWordClass = 'scayt-misspell-word',
 			backCompatibilityMap = {
@@ -62,8 +66,6 @@
 			baseUrl = baseUrl.search(/^\/\//) === 0 ? protocol + baseUrl : baseUrl;
 
 			if(typeof window.SCAYT === 'undefined' || typeof window.SCAYT.TINYMCE !== 'function') {
-				var scriptLoader = new tinymce.dom.ScriptLoader();
-
 				// add onLoad callbacks for editors while SCAYT is loading
 				loadingHelper[editor.id] = callback;
 				loadingHelper.loadOrder.push(editor.id);
