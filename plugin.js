@@ -341,12 +341,24 @@
 				settings.scayt_contextMenuItemsOrder = getParameter('scayt_contextMenuItemsOrder');
 				settings.scayt_contextMenuItemsOrder = settings.scayt_contextMenuItemsOrder.replace(/\s?[\|]+/g, ' ');
 
+				// prepare uiTabs parameter
+				settings.scayt_uiTabs = utils.getParameter('scayt_uiTabs').split(',');
+				// lets validate our scayt_uiTabs option : now it should contain comma separated '0' or '1' symbols
+				if(settings.scayt_uiTabs.length != 3 || !utils.validateArray(settings.scayt_uiTabs, function(value) {
+					return value == 0 || value == 1;
+				})) {
+					settings.scayt_uiTabs = optionDefinition.scayt_uiTabs['default'].split(',');
+				}
+
 				_SCAYT.setState(editor, settings.scayt_autoStartup);
 			},
 			init: function(editor) {
 				var ed = editor;
 
+				// preprocess settings for backward compatibility
+				tinymce.plugins.SCAYT.replaceOldOptionsNames(editor.settings);
 				this.parseOptions(ed);
+
 				this.bindEvents(ed);
 			},
 			bindEvents: function(editor) {
@@ -467,6 +479,14 @@
 						e.parents = temp;
 					}
 				});
+
+				// Remove SCAYT markup with undo level
+				editor.on('BeforeAddUndo', function(e) {
+					if(e.lastLevel && e.lastLevel.content) {
+						e.lastLevel.content = _SCAYT.removeMarkupFromString(editor, e.lastLevel.content);
+					}
+					e.level.content = _SCAYT.removeMarkupFromString(editor, e.level.content);
+				});
 			}
 		};
 
@@ -500,11 +520,7 @@
 					settings = ed.settings,
 					showUITab = settings.scayt_uiTabs;
 
-				settings.scayt_uiTabs = utils.getParameter('scayt_uiTabs');
-				showUITab = settings.scayt_uiTabs.split(",");
-
 				each(definitionDialog.menu, function(menuItem, index) {
-
 					if(menuItem.identification && !!parseInt(showUITab[index])) {
 						menuItem.menuItemIndex = items.length;
 						items.push(menuItem);
@@ -547,16 +563,8 @@
 			init: function(editor) {
 				var _SCAYT = tinymce.plugins.SCAYT;
 
-				this.createToolBarButton(editor);
 				options.init(editor);
-
-				// Remove SCAYT markup with undo level
-				editor.on('BeforeAddUndo', function(e) {
-					if(e.lastLevel && e.lastLevel.content) {
-						e.lastLevel.content = _SCAYT.removeMarkupFromString(editor, e.lastLevel.content);
-					}
-					e.level.content = _SCAYT.removeMarkupFromString(editor, e.level.content);
-				});
+				this.createToolBarButton(editor);
 			}
 		};
 
@@ -728,6 +736,16 @@
 			isInteger: function(num) {
 				return (num ^ 0) === num;
 			},
+			validateArray: function(array, comparison) {
+				var result = true;
+
+				for(var i = 0, len = array.length; i < len; i++) {
+					result = result && comparison(array[i]);
+					if(!result) break;
+				}
+
+				return result;
+			},
 			isNegative: function(num) {
 				return num < 0 ? true : false;
 			},
@@ -874,11 +892,11 @@
 				editor.addMenuItem('aboutscayt', {
 					text: utils.getLang('cm_about','About SCAYT'),
 					onclick: function(data) {
-						var scayt_uiTabs = editor.settings && typeof editor.settings.scayt_uiTabs === 'string' ? editor.settings.scayt_uiTabs.split(",") : editor.settings.scayt_uiTabs,
+						var scayt_uiTabs = editor.settings.scayt_uiTabs,
 							aboutTabIndex = scayt_uiTabs.length;
 
 						tinymce.each(scayt_uiTabs, function(item) {
-							if(scayt_uiTabs.length !== 0 && parseInt(item) == 0) {
+							if(parseInt(item) == 0) {
 								aboutTabIndex--;
 							}
 						});
@@ -1259,8 +1277,7 @@
 					ed = editor,
 					_SCAYT = tinymce.plugins.SCAYT,
 					settings = ed.settings,
-					showUITab = settings.scayt_uiTabs = utils.getParameter('scayt_uiTabs');
-					showUITab = (typeof showUITab === 'object') ? showUITab : showUITab.split(",");
+					showUITab = settings.scayt_uiTabs;
 
 				tabs = [
 					{
@@ -1442,9 +1459,6 @@
 			}
 		};
 
-		// preprocess settings for backward compatibility
-		tinymce.plugins.SCAYT.replaceOldOptionsNames(editor.settings);
-
 		toolbarButton.init(editor);
 		contextMenu.createScaytMenuItem();
 	});
@@ -1465,6 +1479,6 @@
 			}
 
 			return (getContent != startContent) && !this.isNotDirty;
-		}
+		};
 	});
 }());
