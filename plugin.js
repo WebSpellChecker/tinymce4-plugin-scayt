@@ -197,13 +197,6 @@
 				var scaytInstance = this.getScayt(editor);
 				return scaytInstance.getVersion();
 			},
-			removeMarkupFromWord: function(editor) {
-				var scaytInstance = this.getScayt(editor);
-
-				if(scaytInstance) {
-					scaytInstance.removeMarkupFromWord();
-				}
-			},
 			removeMarkupFromString: function(editor, str) {
 				var scaytInstance = this.getScayt(editor);
 
@@ -454,11 +447,16 @@
 					}
 				});
 
-				ed.on('pastepreprocess', function(data) {
+
+				// There is no 'PastePostProcess' event in 4.0.5 tiny. So we need to complitely remove our markup from selection node
+				ed.on('PastePreProcess', function(data) {
 					var scaytInstance = _SCAYT.getScayt(ed);
 
 					if(_SCAYT.getState(ed)) {
+						// Lets remove our possible markup from pasted text
 						data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
+
+						scaytInstance.removeMarkupInSelectionNode();
 						scaytInstance.fire('startSpellCheck');
 					}
 				});
