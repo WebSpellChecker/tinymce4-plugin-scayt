@@ -867,6 +867,7 @@
 					onclick: function() {
 						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
 
+						editor.focus(); // ~ fix bug with focus
 						scaytInstance.ignoreWord();
 					}
 				});
@@ -875,6 +876,8 @@
 					text: utils.getLang('cm_ignore_all','Ignore all'),
 					onclick: function() {
 						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
+
+						editor.focus(); // ~ fix bug with focus
 						scaytInstance.ignoreAllWords();
 					}
 				});
@@ -883,6 +886,8 @@
 					text: utils.getLang('cm_add_word','Add word'),
 					onclick: function() {
 						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
+
+						editor.focus(); // ~ fix bug with focus
 						scaytInstance.addWordToUserDictionary();
 					}
 				});
