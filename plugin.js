@@ -456,8 +456,10 @@
 						// Lets remove our possible markup from pasted text
 						data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
 
-						scaytInstance.removeMarkupInSelectionNode();
-						scaytInstance.fire('startSpellCheck');
+						setTimeout(function() {
+							scaytInstance.removeMarkupInSelectionNode();
+							scaytInstance.fire('startSpellCheck');
+						}, 0);
 					}
 				});
 
