@@ -870,7 +870,9 @@
 						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
 
 						editor.focus(); // ~ fix bug with focus
-						scaytInstance.ignoreWord();
+						setTimeout(function() {
+							scaytInstance.ignoreWord();
+						}, 0);
 					}
 				});
 
@@ -880,7 +882,9 @@
 						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
 
 						editor.focus(); // ~ fix bug with focus
-						scaytInstance.ignoreAllWords();
+						setTimeout(function() {
+							scaytInstance.ignoreAllWords();
+						}, 0);
 					}
 				});
 
@@ -890,7 +894,9 @@
 						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
 
 						editor.focus(); // ~ fix bug with focus
-						scaytInstance.addWordToUserDictionary();
+						setTimeout(function() {
+							scaytInstance.addWordToUserDictionary();
+						}, 0);
 					}
 				});
 
