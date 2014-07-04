@@ -5,7 +5,8 @@
 	desc:'Oikolue kirjoitettaessa',
 
 	cm_more_suggestions: 'Lisää ehdotuksia',
-	cm_add_word:'Lisää sana',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Lisää sana',
 	cm_ignore_word:'Ohita',
 	cm_ignore_all: 'Ohita kaikki',
 	cm_about: 'Tietoja oikoluvusta kirjoitetaessa SCAYT',
@@ -15,7 +16,7 @@
 	tb_menu_dictionaries: 'Sanakirjat',
 	tb_menu_about: 'Tietoja oikoluvusta kirjoitetaessa',
 
-	tb_button_title_enable: 'Ota käyttöön oikoluku kirjoitettaessa', 
+	tb_button_title_enable: 'Ota käyttöön oikoluku kirjoitettaessa',
 	tb_button_title_disable: 'Poista käytöstä oikoluku kirjoitetaessa',
 
 	tab_options : 'Asetukset',
@@ -26,7 +27,7 @@
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Ohita sanat, jotka on kirjoitettu kokonaan isoilla kirjaimilla",
 	label_ignoreDomainNames: "Ohita verkkotunnukset",
 	label_mixedCase: "Ohita sanat, joissa on sekoitettu isoja ja pieniä kirjaimia",

@@ -5,7 +5,8 @@ tinyMCE.addI18n('el.scayt',{
 	desc:'SpellCheckAsYouType',
 
 	cm_more_suggestions: 'More Suggestions',
-	cm_add_word:'Add word',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Add word',
 	cm_ignore_word:'Ignore word',
 	cm_ignore_all: 'Ignore all words',
 	cm_about: 'About SCAYT',
@@ -15,7 +16,7 @@ tinyMCE.addI18n('el.scayt',{
 	tb_menu_dictionaries: 'SCAYT Dictionaries',
 	tb_menu_about: 'About SCAYT',
 
-	tb_button_title_enable: 'Start SpellCheckAsYouType', 
+	tb_button_title_enable: 'Start SpellCheckAsYouType',
 	tb_button_title_disable: 'Stop SpellCheckAsYouType',
 
 	tab_options : 'Options',
@@ -26,7 +27,7 @@ tinyMCE.addI18n('el.scayt',{
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Ignore All-Caps Words",
 	label_ignoreDomainNames: "Ignore Domain Names",
 	label_mixedCase: "Ignore Words with Mixed Case",
@@ -36,7 +37,7 @@ tinyMCE.addI18n('el.scayt',{
 	about_version_num: "3.0.0",
 	about_throwt_copy: "&copy; <a style='text-decoration: underline;cursor:pointer;color:#00f' href='http://www.webspellchecker.net/' target='_blank'>1999-2014 SpellChecker.net, Inc.</a><br />All Rights Reserved.",
 	about_help: "SCAYT help",
-	
+
 	dic_dictionary_name: "Dictionary Name",
 	dic_about_info: "Initially the User Dictionary is stored in a Cookie. However, Cookies are limited in size. When the User Dictionary grows to a point where it cannot be stored in a Cookie, then the dictionary may be stored on our server. To store your personal dictionary on our server you should specify a name for your dictionary. If you already have a stored dictionary, please type it's name and click the Restore button.",
 	dic_create: "Create",

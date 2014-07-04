@@ -12,8 +12,225 @@
 	var dom = tinymce.DOM;
 	var util = tinymce.util;
 	var undoManager = tinymce.UndoManager;
-	
-	tinymce.PluginManager.requireLangPack('scayt');	
+
+	tinymce.PluginManager.requireLangPack('scayt');
+
+	// Create SCAYT namespace in tinymce.plugins
+	tinymce.createNS('tinymce.plugins.SCAYT');
+
+	tinymce.plugins.SCAYT = (function() {
+		var state = {},
+			instances = {},
+			suggestions = [],
+			loadingHelper = {
+				loadOrder: []
+			},
+
+			// look at multiload app realization
+			scriptLoader = new tinymce.dom.ScriptLoader(),
+
+			dataAttributeName = 'data-scayt-word',
+			misspelledWordClass = 'scayt-misspell-word',
+			backCompatibilityMap = {
+				'scayt_context_commands'		: 'scayt_contextCommands',
+				'scayt_slang'					: 'scayt_sLang',
+				'scayt_max_suggestion'			: 'scayt_maxSuggestions',
+				'scayt_custom_dic_ids'			: 'scayt_customDictionaryIds',
+				'scayt_user_dic_name'			: 'scayt_userDictionaryName',
+				'scayt_ui_tabs'					: 'scayt_uiTabs',
+				'scayt_service_protocol'		: 'scayt_serviceProtocol',
+				'scayt_service_host'			: 'scayt_serviceHost',
+				'scayt_service_port'			: 'scayt_servicePort',
+				'scayt_service_path'			: 'scayt_servicePath',
+				'scayt_context_moresuggestions'	: 'scayt_moreSuggestions',
+				'scayt_customer_id'				: 'scayt_customerId',
+				'scayt_custom_url'				: 'scayt_srcUrl',
+				'scayt_auto_startup'			: 'scayt_autoStartup',
+				'scayt_context_menu_items_order': 'scayt_contextMenuItemsOrder'
+			};
+
+		var replaceOldOptionsNames = function(config) {
+			for(var key in config) {
+				if(key in backCompatibilityMap) {
+					config[backCompatibilityMap[key]] = config[key];
+					delete config[key];
+				}
+			}
+		};
+
+		var loadScaytLibrary = function(editor, callback) {
+			var protocol = document.location.protocol;
+			var baseUrl = editor.getParam('scayt_srcUrl');
+			// Default to 'http' for unknown.
+			protocol = protocol.search(/https?:/) !== -1 ? protocol : 'http:';
+			baseUrl = baseUrl.search(/^\/\//) === 0 ? protocol + baseUrl : baseUrl;
+
+			if(typeof window.SCAYT === 'undefined' || typeof window.SCAYT.TINYMCE !== 'function') {
+				// add onLoad callbacks for editors while SCAYT is loading
+				loadingHelper[editor.id] = callback;
+				loadingHelper.loadOrder.push(editor.id);
+
+				scriptLoader.add(baseUrl);
+				scriptLoader.loadQueue(function(success) {
+					var editorName;
+
+					for(var i = 0; i < loadingHelper.loadOrder.length; i++) {
+						editorName = loadingHelper.loadOrder[i];
+
+						tinymce.plugins.SCAYT.fireOnce(tinymce, 'onScaytReady');
+
+						if(typeof loadingHelper[editorName] === 'function') {
+							loadingHelper[editorName](tinymce.editors[editorName]);
+						}
+
+						delete loadingHelper[editorName];
+					}
+					loadingHelper.loadOrder = [];
+				});
+			} else if(window.SCAYT && typeof window.SCAYT.TINYMCE === 'function') {
+				tinymce.plugins.SCAYT.fireOnce(tinymce, 'onScaytReady');
+
+				if(!tinymce.plugins.SCAYT.getScayt(tinymce.editors[editor.id])) {
+					if(typeof callback === 'function') {
+						callback(editor);
+					}
+				}
+			}
+		};
+
+		var createScayt = function(editor) {
+			loadScaytLibrary(editor, function(_editor) {
+				var _scaytInstanceOptions = {
+					debug 				: _editor.getParam('scayt_debug', false),
+					lang 				: _editor.getParam('scayt_sLang'),
+					container 			: (_editor.getContentAreaContainer() && _editor.getContentAreaContainer().children[0]) ? _editor.getContentAreaContainer().children[0] : _editor.getElement(),
+					customDictionary	: _editor.getParam('scayt_customDictionaryIds'),
+					userDictionaryName 	: _editor.getParam('scayt_userDictionaryName'),
+					localization		: _editor.langCode,
+					customer_id			: _editor.getParam('scayt_customerId'),
+					data_attribute_name : dataAttributeName,
+					misspelled_word_class : misspelledWordClass
+				};
+
+				if(_editor.getParam('scayt_serviceProtocol')) {
+					_scaytInstanceOptions['service_protocol'] = _editor.getParam('scayt_serviceProtocol');
+				}
+
+				if(_editor.getParam('scayt_serviceHost')) {
+					_scaytInstanceOptions['service_host'] = _editor.getParam('scayt_serviceHost');
+				}
+
+				if(_editor.getParam('scayt_servicePort')) {
+					_scaytInstanceOptions['service_port'] = _editor.getParam('scayt_servicePort');
+				}
+
+				if(_editor.getParam('scayt_servicePath')) {
+					_scaytInstanceOptions['service_path'] = _editor.getParam('scayt_servicePath');
+				}
+
+				var scaytInstance = new SCAYT.TINYMCE(_scaytInstanceOptions,
+					function() {
+						// success callback
+
+					},
+					function() {
+						// error callback
+
+				});
+
+				scaytInstance.subscribe('suggestionListSend', function(data) {
+					suggestions = data.suggestionList;
+				});
+
+				instances[_editor.id] = scaytInstance;
+			});
+		};
+		var destroyScayt = function(editor) {
+			var scaytInstance = instances[editor.id];
+
+			if(scaytInstance) {
+				scaytInstance.destroy();
+			}
+
+			delete instances[editor.id];
+		};
+
+		return {
+			create: function(editor) {
+				return createScayt(editor);
+			},
+			destroy: function(editor) {
+				return destroyScayt(editor);
+			},
+			getScayt: function(editor) {
+				return instances[editor.id] || false;
+			},
+			getSuggestions: function() {
+				return suggestions;
+			},
+			getState: function(editor) {
+				var editorName = (typeof editor === 'object') ? editor.id : editor;
+				return state[editorName];
+			},
+			setState: function(editor, status) {
+				var editorName = (typeof editor === 'object') ? editor.id : editor;
+				status = status || false;
+				return state[editorName] = status;
+			},
+			getOptions: function(editor) {
+				var scaytInstance = this.getScayt(editor);
+				return scaytInstance.getApplicationConfig();
+			},
+			getCurrentLanguage: function(editor) {
+				var scaytInstance = this.getScayt(editor);
+				return scaytInstance.getLang();
+			},
+			getLanguages: function(editor) {
+				var scaytInstance = this.getScayt(editor);
+				return scaytInstance.getLangList();
+			},
+			getUserDictionaryName: function(editor) {
+				var scaytInstance = this.getScayt(editor);
+				return scaytInstance.getUserDictionaryName();
+			},
+			getVersion: function(editor) {
+				var scaytInstance = this.getScayt(editor);
+				return scaytInstance.getVersion();
+			},
+			removeMarkupFromString: function(editor, str) {
+				var scaytInstance = this.getScayt(editor);
+
+				if(scaytInstance) {
+					return scaytInstance.removeMarkupFromString(str);
+				}
+
+				return str;
+			},
+			replaceOldOptionsNames: function(config) {
+				replaceOldOptionsNames(config);
+			},
+			fireOnce: function(obj, event) {
+				if(!obj['uniqueEvtKey_' + event]) {
+					obj['uniqueEvtKey_' + event] = true;
+					obj.fire(event);
+				}
+			},
+			executeOnce: function(editor, event, handler) {
+				var _handler = function() {
+					editor.off(event, _handler);
+					if(typeof handler === 'function') {
+						handler();
+					}
+				};
+
+				editor.on(event, _handler);
+			},
+			misspelledWordClass: (function() {
+				return misspelledWordClass;
+			}())
+		};
+	}());
+
 	tinymce.PluginManager.add('scayt', function(editor, url) {
 		"use strict";
 
@@ -22,113 +239,253 @@
 
 		var options = {
 			definitionDefaultOption: {
-				scayt_custom_url: {
-					type: "string",
-					"default": "//svc.webspellchecker.net/spellcheck31/lf/scayt3/tinymce/tinymcescayt.js"
+				scayt_srcUrl: {
+					type: 'string',
+					'default': '//svc.webspellchecker.net/spellcheck31/lf/scayt3/tinymce/tinymcescayt.js'
 				},
-
-				scayt_auto_startup: {
-					type: "boolean",
-					"default": false
+				scayt_sLang: {
+					type: 'string',
+					'default': 'en_US'
 				},
-				
-				scayt_customer_id: {
-					type: "string",
-					"default": '1:WvF0D4-UtPqN1-43nkD4-NKvUm2-daQqk3-LmNiI-z7Ysb4-mwry24-T8YrS3-Q2tpq2'
+				scayt_autoStartup: {
+					type: 'boolean',
+					'default': false
 				},
-
-				scayt_max_suggestion: {
-					type: "number",
-					"default": 5
+				scayt_maxSuggestions: {
+					type: 'number',
+					'default': 5
 				},
-
-				scayt_context_moresuggestions: {
-					type: "string",
-					"default": "on",
+				scayt_moreSuggestions: {
+					type: 'string',
+					'default': 'on',
 					allowable: {
 						on: true,
 						off: true
-					}	
+					}
 				},
-				scayt_context_commands: {
-					type: "string",
-					"default": "ignore,ignoreall,add"
+				scayt_contextCommands: {
+					type: 'string',
+					'default': 'ignore,ignoreall,add'
 				},
-				scayt_context_menu_items_order: {
-					type: "string",
-					"default": "suggest|moresuggest|control"
+				scayt_contextMenuItemsOrder: {
+					type: 'string',
+					'default': 'suggest|moresuggest|control'
 				},
-				scayt_ui_tabs: {
-					type: "string",
-					"default": "1,1,1"
+				scayt_uiTabs: {
+					type: 'string',
+					'default': '1,1,1'
 				},
-				scayt_slang: {
-					type: "string",
-					"default": "en_US"
+				scayt_customDictionaryIds: {
+					type: 'string',
+					'default': ''
+				},
+				scayt_userDictionaryName: {
+					type: 'string',
+					'default': null
+				},
+				scayt_serviceProtocol: {
+					type: 'string',
+					'default': null
+				},
+				scayt_serviceHost: {
+					type: 'string',
+					'default': null
+				},
+				scayt_servicePort: {
+					type: 'string',
+					'default': null
+				},
+				scayt_servicePath: {
+					type: 'string',
+					'default': null
 				}
 			},
 			parseOptions: function(editor) {
 				var self = this,
 					optionDefinition = self.definitionDefaultOption,
 					settings = editor.settings,
+					_SCAYT = tinymce.plugins.SCAYT,
 					getParameter = utils.getParameter,
 					isAllowable = utils.isAllowable;
 
-				settings.scayt_auto_startup = getParameter('scayt_auto_startup');
-				settings.scayt_customer_id = getParameter('scayt_customer_id');
-				settings.scayt_context_moresuggestions = isAllowable("scayt_context_moresuggestions") ? getParameter("scayt_context_moresuggestions") : "off";
-				settings.scayt_custom_url = getParameter('scayt_custom_url');
-				settings.scayt_slang = getParameter('scayt_slang');
+				settings.scayt_autoStartup = getParameter('scayt_autoStartup');
+				settings.scayt_customerId = editor.getParam('scayt_customerId');
+				settings.scayt_moreSuggestions = isAllowable("scayt_moreSuggestions") ? getParameter("scayt_moreSuggestions") : "off";
+				settings.scayt_maxSuggestions = utils.isNegative(getParameter('scayt_maxSuggestions')) ? optionDefinition['scayt_maxSuggestions']['default'] : getParameter('scayt_maxSuggestions');
+				settings.scayt_srcUrl = getParameter('scayt_srcUrl');
+				settings.scayt_sLang = getParameter('scayt_sLang');
 
-				settings.scayt_custom_dic_ids = getParameter('scayt_custom_dic_ids');
-				settings.scayt_user_dic_name = getParameter('scayt_user_dic_name');
-				settings.scayt_service_protocol = getParameter('scayt_service_protocol');
-				settings.scayt_service_host = getParameter('scayt_service_host');
-				settings.scayt_service_port = getParameter('scayt_service_port');
-				settings.scayt_service_path = getParameter('scayt_service_path');
+				settings.scayt_customDictionaryIds = getParameter('scayt_customDictionaryIds');
+				settings.scayt_userDictionaryName = getParameter('scayt_userDictionaryName');
+				settings.scayt_serviceProtocol = getParameter('scayt_serviceProtocol');
+				settings.scayt_serviceHost = getParameter('scayt_serviceHost');
+				settings.scayt_servicePort = getParameter('scayt_servicePort');
+				settings.scayt_servicePath = getParameter('scayt_servicePath');
 
-				settings.scayt_context_menu_items_order = getParameter('scayt_context_menu_items_order');
-				settings.scayt_context_menu_items_order = settings.scayt_context_menu_items_order.replace(/\s?[\|]+/g, ' ');
+				settings.scayt_contextCommands = utils.getParameter('scayt_contextCommands');
+				if(settings.scayt_contextCommands === 'all') {
+					settings.scayt_contextCommands = optionDefinition['scayt_contextCommands']['default'];
+				} else if(settings.scayt_contextCommands === 'off') {
+					settings.scayt_contextCommands = '';
+				} else {
+					settings.scayt_contextCommands = settings.scayt_contextCommands.replace(/\s?[\|]+/gi, ' ');
+				}
 
+				settings.scayt_contextMenuItemsOrder = getParameter('scayt_contextMenuItemsOrder');
+				settings.scayt_contextMenuItemsOrder = settings.scayt_contextMenuItemsOrder.replace(/\s?[\|]+/g, ' ');
+
+				// prepare uiTabs parameter
+				settings.scayt_uiTabs = utils.getParameter('scayt_uiTabs').split(',');
+				// lets validate our scayt_uiTabs option : now it should contain comma separated '0' or '1' symbols
+				if(settings.scayt_uiTabs.length != 3 || !utils.validateArray(settings.scayt_uiTabs, function(value) {
+					return value == 0 || value == 1;
+				})) {
+					settings.scayt_uiTabs = optionDefinition.scayt_uiTabs['default'].split(',');
+				}
+
+				_SCAYT.setState(editor, settings.scayt_autoStartup);
 			},
 			init: function(editor) {
+				var ed = editor;
+
+				// preprocess settings for backward compatibility
+				tinymce.plugins.SCAYT.replaceOldOptionsNames(editor.settings);
+				this.parseOptions(ed);
+
+				this.bindEvents(ed);
+			},
+			bindEvents: function(editor) {
 				var self = this,
 					ed = editor,
-					settings = ed.settings;
+					_SCAYT = tinymce.plugins.SCAYT,
+					scaytPlugin = editor.plugins.scayt,
+					inlineMode = editor.inline;
 
-				self.parseOptions(ed);
+				//@TODO: find solution for inline support
+				// var bindInlineModeEvents = function(editor) {
+				// 	_SCAYT.executeOnce(ed, 'focus', contentDomReady);
+				// 	_SCAYT.executeOnce(ed, 'blur', scaytDestroy);
+				//};
 
-				ed.on('init', function(e) {
-					var editor = e.target;
+				//@TODO: find solution for inline support
+				var contentDomReady = function(editor) {
+					var button = toolbarButton.scaytButton;
 
-					var check = window.setInterval(function() {
-						if (!editor.inline && editor.settings.scayt_auto_startup && !tinymce.isLoadingStarted) {
-							clearInterval(check);
-							toolbarButton.toggleStateMenuSelect(editor);
+					if(!editor.settings.readonly) {
+						// The event are fired when editable iframe node was reinited so we should restart our service
+						if(_SCAYT.getState(editor) === true) {
+							_SCAYT.create(editor);
+							if(button) {
+								button.active(true);
+							}
+							contextMenu.create(editor);
 						}
-					},0);
-				});
+					} else {
+						if(button) {
+							button.disabled(true);
+						}
+					}
+				};
 
-				// disabled scayt button when editor inline
-				if (editor.inline) {
+				var scaytDestroy = function(editor) {
+					var scaytInstance = _SCAYT.getScayt(ed),
+						button = toolbarButton.scaytButton;
+
+					if(scaytInstance) {
+						_SCAYT.destroy(editor);
+						if(button) {
+							button.active(false);
+						}
+						contextMenu.destroy(editor);
+					}
+				};
+
+				if(inlineMode) {
+					//@TODO: find solution for inline support
+					// bindInlineModeEvents(editor);
 					ed.on('focusin', function(e) {
-						toolbarButton.scaytButton.disabled(true);
+						var button = toolbarButton.scaytButton;
+
+						if(button) {
+							button.disabled(true);
+						}
+					});
+				} else {
+					// Initialization the tinymce editor
+					ed.on('init', function(e) {
+						var editor = e.target;
+
+						contentDomReady(editor);
 					});
 				}
 
-				ed.on('onScaytReady', function(ed) {
-					var editor = ed;
-	
-					if (editor.settings.scayt_auto_startup) {
-						for(var i = 0; i < scayt.startingStack.length; i++){
-							scayt.createScayt(tinymce.editors[scayt.startingStack[i]]);
+				ed.on('remove', function() {
+					return _SCAYT.destroy(ed);
+				});
+
+				ed.on('SetContent', function(data) {
+					var scaytInstance = _SCAYT.getScayt(ed);
+
+					if(scaytInstance && _SCAYT.getState(ed)) {
+						if(data['content']) {
+							data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
 						}
-						scayt.startingStack = [];
 
-					}else {
-						scayt.createScayt(editor);
+						scaytInstance.fire('startSpellCheck');
 					}
+				});
 
+				ed.on('GetContent', function(data) {
+					var scaytInstance = _SCAYT.getScayt(ed);
+
+					data.preventDefault();
+
+					if(_SCAYT.getState(ed)) {
+						if(data['content']) {
+							data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
+						}
+					}
+				});
+
+
+				// There is no 'PastePostProcess' event in 4.0.5 tiny. So we need to complitely remove our markup from selection node
+				ed.on('PastePreProcess', function(data) {
+					var scaytInstance = _SCAYT.getScayt(ed);
+
+					if(_SCAYT.getState(ed)) {
+						// Lets remove our possible markup from pasted text
+						data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
+
+						setTimeout(function() {
+							scaytInstance.removeMarkupInSelectionNode();
+							scaytInstance.fire('startSpellCheck');
+						}, 0);
+					}
+				});
+
+				ed.on('NodeChange', function(e) {
+					var temp = [],
+						className = tinymce.plugins.SCAYT.misspelledWordClass;
+
+					if(e.element && e.element.nodeName == 'SPAN' && e.element.className == className) {
+
+						tinymce.each(e.parents, function(item) {
+							if(!(item.nodeName == 'SPAN' && item.className == className)) {
+								temp.push(item);
+							}
+						});
+
+						e.element = e.element.parentNode;
+						e.parents = temp;
+					}
+				});
+
+				// Remove SCAYT markup with undo level
+				editor.on('BeforeAddUndo', function(e) {
+					if(e.lastLevel && e.lastLevel.content) {
+						e.lastLevel.content = _SCAYT.removeMarkupFromString(editor, e.lastLevel.content);
+					}
+					e.level.content = _SCAYT.removeMarkupFromString(editor, e.level.content);
 				});
 			}
 		};
@@ -161,17 +518,13 @@
 					each = tinymce.each,
 					ed = editor,
 					settings = ed.settings,
-					showUITab = settings.scayt_ui_tabs;
-
-				settings.scayt_ui_tabs = utils.getParameter('scayt_ui_tabs');	
-				showUITab = settings.scayt_ui_tabs.split(",");
+					showUITab = settings.scayt_uiTabs;
 
 				each(definitionDialog.menu, function(menuItem, index) {
-
-					if (menuItem.identification && !!parseInt(showUITab[index])) {
+					if(menuItem.identification && !!parseInt(showUITab[index])) {
 						menuItem.menuItemIndex = items.length;
 						items.push(menuItem);
-					} else if(menuItem.identification == 'about'){
+					} else if(menuItem.identification == 'about') {
 						menuItem.menuItemIndex = (items.length === 0) ?  0 : items.length;
 						items.push(menuItem);
 					}
@@ -181,103 +534,39 @@
 				return items;
 			},
 			toggleStateMenuSelect: function(editor) {
-				var self = this,
-					button = self.scaytButton,
-					menu = self.scaytButton.menu;
+				var _SCAYT = tinymce.plugins.SCAYT,
+					scaytPluginState = _SCAYT.setState(editor, !_SCAYT.getState(editor)),
+					button = this.scaytButton,
+					menu = this.scaytButton.menu;
 
-				if (scayt.isScaytEnabled(editor)) {
-					scayt.destroy(editor);
-					button.active(false);
-					self.findOutStatusMenu(menu, button);
-				} else {
-					scayt.loadScaytLibriary(editor);
+				if(scaytPluginState) {
+					_SCAYT.create(editor);
 					button.active(true);
-					self.findOutStatusMenu(menu, button);
 					contextMenu.create(editor);
+				} else {
+					_SCAYT.destroy(editor);
+					button.active(false);
+					contextMenu.destroy(editor);
 				}
+
+				this.findOutStatusMenu(menu, button);
 			},
 			findOutStatusMenu: function(aControl, aMenu) {
 				var items = aControl ? aControl._items : {},
 					stateMenu = aMenu.active() ? false : true;
 
-				tinymce.each(items, function(aElement){
+				tinymce.each(items, function(aElement) {
 					aElement.disabled(stateMenu);
 				});
 				return !stateMenu;
 			},
 			init: function(editor) {
-				var self = this;
-				self.createToolBarButton(editor);
-				options.init(editor);
+				var _SCAYT = tinymce.plugins.SCAYT;
 
-				// Remove SCAYT markup with undo level
-				editor.on('BeforeAddUndo', function(e){
-					if (e.lastLevel && e.lastLevel.content) {
-						e.lastLevel.content = scayt.removeMarkupFromString(editor, e.lastLevel.content);
-					}
-					e.level.content = scayt.removeMarkupFromString(editor, e.level.content);
-				});
+				options.init(editor);
+				this.createToolBarButton(editor);
 			}
 		};
-
-		editor.on('SetContent', function(data) {
-
-			var scaytInstance = scayt.getScayt(editor);
-			if (!scaytInstance || scaytInstance.enabled === false){
-				return;
-			}
-
-			if (data['content']) {
-				data['content'] = scayt.removeMarkupFromString(editor, data['content']);
-			}
-
-			scaytInstance.fire("startSpellCheck");
-		});
-
-		editor.on('GetContent', function(data) {
-			data.preventDefault();
-
-			var scaytInstance = scayt.getScayt(editor);
-			if (!scaytInstance || scaytInstance.enabled === false){
-				return;
-			}
-
-			if (data['content']) {
-				data['content'] = scayt.removeMarkupFromString(editor, data['content']);
-			}
-		});
-
-		editor.on('pastepreprocess', function(data) {
-
-			var scaytInstance = scayt.getScayt(editor);
-			if (!scaytInstance || scaytInstance.enabled === false){
-				return;
-			}
-			
-			data.content = scayt.removeMarkupFromString(editor, data.content);
-			scaytInstance.fire("startSpellCheck");
-		});
-
-		editor.on('NodeChange', function(e) {
-			var ed = editor, temp = [];
-
-			if (e.element && e.element.nodeName == 'SPAN' && e.element.className == 'red') {
-
-				tinymce.each(e.parents, function(item) {
-					if (!(item.nodeName == 'SPAN' && item.className == 'red')) {
-						temp.push(item);
-					}
-				});
-
-				e.element = e.element.parentNode;
-				e.parents = temp;
-			}
-		});
-
-		editor.on('remove', function() {
-			var scaytInstance = scayt.getScayt(editor);
-			return scaytInstance.destroy(editor);
-		});
 
 		var contextMenu = {
 			originalMenu: undefined,
@@ -289,7 +578,7 @@
 				/* 	this method creates contextmenu item in original menu
 					and will be always invisible
 					Created to save link of original tinymce contextmenu.
-				*/ 
+				*/
 				editor.addMenuItem('scayt', {
 					context: 'scayt3t',
 					text: 'SCAYT',
@@ -303,62 +592,65 @@
 				var self = this,
 					ed = editor;
 
-				if (self.menu !== null) {
+				if(self.menu != null) {
 					self.menu.remove();
 				}
 				self.menu = null;
 			},
 			create: function(editor) {
 				var self = this,
+					_SCAYT = tinymce.plugins.SCAYT,
 					ed = editor,
 					settings = ed.settings,
 					command = '',
 					scaytInstance = null,
 					word = null,
 					wrapMenu = null,
+					allSuggestions,
 					suggestions,
 					moreSuggestions,
-					needSuggestions,
-					maxSuggestions = settings.scayt_max_suggestion = utils.isNegative(utils.getParameter('scayt_max_suggestion')) ? options.definitionDefaultOption['scayt_max_suggestion']['default'] : utils.getParameter('scayt_max_suggestion');
+					needMoreSuggestions,
+					maxSuggestions = settings.scayt_maxSuggestions;
 
 				ed.on('contextmenu', function(e) {
 					e.preventDefault();
-					if (!!editor.settings.readonly) {
+
+					if(!!editor.settings.readonly) {
 						return;
 					}
 
-					scaytInstance = scayt.getScayt(ed);
+					scaytInstance = _SCAYT.getScayt(ed);
 					word = utils.getSelectionWord(scaytInstance);
 
-					if (!word) {
+					if(!word) {
 						return;
 					}
 
-					scaytInstance.fire("getSuggestionsList", { lang: scayt.getCurrentLanguage(ed), word: word });
+					scaytInstance.fire("getSuggestionsList", {lang: _SCAYT.getCurrentLanguage(ed), word: word});
 
-					suggestions = scayt.suggestions.slice(0, maxSuggestions);
-					moreSuggestions = scayt.suggestions.slice(maxSuggestions, 15);
 
-					needSuggestions = settings.scayt_context_moresuggestions !== 'on' ? false : suggestions[0] == 'no_any_suggestions' || moreSuggestions[0] == 'no_any_suggestions' ? false : ' moreSuggestions';
+					// Get all suggestions
+					allSuggestions = _SCAYT.getSuggestions();
+					// Split suggestions items into 'Suggestions' and 'More suggestions' menu items
+					suggestions = allSuggestions.slice(0, maxSuggestions);
+					moreSuggestions = allSuggestions.slice(maxSuggestions, 15);
+
+					// Do we need 'More suggestions' menu item ?
+					if(settings.scayt_moreSuggestions === 'on' && moreSuggestions.length > 0 && moreSuggestions[0] != 'no_any_suggestions') {
+						needMoreSuggestions = true;
+					} else {
+						needMoreSuggestions = false;
+					}
 
 					utils.generateMenuItemsForSuggestion(suggestions);
 					utils.generateMoreSuggestionsItem(moreSuggestions);
 					utils.registerControlItems();
 
-					settings.scayt_context_commands = utils.getParameter('scayt_context_commands');
-					if(settings.scayt_context_commands === "all") {
-						settings.scayt_context_commands = options.definitionDefaultOption['scayt_context_commands']['default'];
-					} else if(settings.scayt_context_commands === "off") {
-						settings.scayt_context_commands = "";
-					} else {
-						settings.scayt_context_commands = settings.scayt_context_commands.replace(/\s?[\|]+/gi, ' ');
-					}
+					var control = settings.scayt_contextCommands + ' | aboutscayt |',
+						suggest = (suggestions.length > 0 ? suggestions.join(' ') : (needMoreSuggestions || allSuggestions.length > 0 ? '' : 'no_any_suggestions')) + ' | ',
+						moresuggest = needMoreSuggestions ? (' moreSuggestions' + ' | ') : '';
 
-					var 	control = settings.scayt_context_commands + ' | aboutscayt |',
-						suggest = suggestions.join(" ") + ' | ',
-						moresuggest = !needSuggestions ? '' : needSuggestions + ' | ';
-
-					self.contextmenu = settings.scayt_context_menu_items_order.replace('control', control).replace('moresuggest', moresuggest).replace('suggest', suggest);
+					self.contextmenu = settings.scayt_contextMenuItemsOrder.replace('control', control).replace('moresuggest', moresuggest).replace('suggest', suggest);
 					self.contextmenu = editor.settings.contextmenu.replace('scayt', self.contextmenu);
 
 					// Render menu
@@ -367,31 +659,31 @@
 					tinymce.each(self.contextmenu.split(/[ ,]/), function(name) {
 					var item = ed.menuItems[name];
 
-						if (name == '|') {
+						if(name == '|') {
 							item = {text: name};
 						}
 
-						if (item) {
+						if(item) {
 							item.shortcut = ''; // Hide shortcuts
 							self.items.push(item);
 						}
 					});
 
-					for (var i = 0; i < self.items.length; i++) {
-						if (self.items[i].text == '|') {
-							if (i === 0 || i == self.items.length - 1) {
+					for(var i = 0; i < self.items.length; i++) {
+						if(self.items[i].text == '|') {
+							if(i === 0 || i == self.items.length - 1) {
 								self.items.splice(i, 1);
 							}
 						}
 					}
-				
+
 					self.menu = new tinymce.ui.Menu({
 						items: self.items,
 						context: 'scayt',
 						onCancel: function() {
-							if (self.menu) {
+							if(self.menu) {
 								self.menu.hide();
-								self.menu = undefined;
+								self.menu = null;
 							}
 						}
 					});
@@ -401,19 +693,19 @@
 
 					var menuEl = self.menu.getEl();
 
-					if (!tinymce.isIE) {
+					if(!tinymce.isIE) {
 						 menuEl.style.maxHeight = 'inherit';
 						 menuEl.style.position = 'absolute';
 						 menuEl.style.overflow = 'visible';
 					} else {
 						menuEl.style.height = 'auto';
 
-						if (window.JSON) {
+						if(window.JSON) {
 							menuEl.style.maxHeight = 'inherit';
 							menuEl.style.overflow = 'inherit';
 						}
 					}
-					
+
 					wrapMenu = '#' + self.menu._id;
 
 					scaytInstance.showBanner(wrapMenu);
@@ -422,7 +714,7 @@
 					// Position menu
 					self.pos = {x: e.pageX, y: e.pageY};
 
-					if (!ed.inline) {
+					if(!ed.inline) {
 						self.pos = tinymce.DOM.getPos(ed.getContentAreaContainer());
 						self.pos.x += e.clientX;
 						self.pos.y += e.clientY;
@@ -430,21 +722,29 @@
 
 					self.menu.moveTo(self.pos.x, self.pos.y);
 
-					ed.on('remove', function() {
-						self.menu.remove();
-						self.menu = null;
+					self.menu.on('cancel', function() {
+						this.remove();
+						this.menu = null;
 					});
 
 					return false;
 				});
-				
-
 			}
 		};
 
 		var utils = {
-			isInteger: function(num){
-			  return (num ^ 0) === num;
+			isInteger: function(num) {
+				return (num ^ 0) === num;
+			},
+			validateArray: function(array, comparison) {
+				var result = true;
+
+				for(var i = 0, len = array.length; i < len; i++) {
+					result = result && comparison(array[i]);
+					if(!result) break;
+				}
+
+				return result;
 			},
 			isNegative: function(num) {
 				return num < 0 ? true : false;
@@ -457,13 +757,13 @@
 					return editor.getParam(optionName);
 				}
 
-				var checkType = function(name){
+				var checkType = function(name) {
 					return (typeof editor.getParam(name) === optionDefinition[name]['type']);
 				};
 
 				return checkType(optionName) ? editor.getParam(optionName) : optionDefinition[optionName]['default'];
 			},
-			isAllowable: function(optionName){
+			isAllowable: function(optionName) {
 				var optionDefinition = options.definitionDefaultOption;
 
 				return  (utils.getParameter(optionName) in optionDefinition[optionName]["allowable"]);
@@ -475,23 +775,23 @@
 			getTranslate: function(aString) {
 				return editor.editorManager.i18n.translate(aString);
 			},
-			getSelectionWord: function(scaytInstance){
-				if(!scaytInstance.enabled){
-					return false;
-				}
-				
-				var selectionNode = scaytInstance.getSelectionNode(),
-					word;
+			getSelectionWord: function(scaytInstance) {
+				var selectionNode,
+					word = false;
 
-				if(selectionNode) {
-					word = selectionNode.getAttribute(scaytInstance.getNodeAttribute());
-				} else {
-					word = selectionNode;
+				if(scaytInstance) {
+					selectionNode = scaytInstance.getSelectionNode();
+
+					if(selectionNode) {
+						word = selectionNode.getAttribute(scaytInstance.getNodeAttribute());
+					} else {
+						word = selectionNode;
+					}
 				}
 
 				return word;
 			},
-			registerMenuItem: function(name, itemDefinition){
+			registerMenuItem: function(name, itemDefinition) {
 				editor.addMenuItem(name, itemDefinition);
 			},
 			// TODO: refactor this code
@@ -501,30 +801,40 @@
 
 				undo.add();
 			},
-			generateReplaceCommand: function(scaytInstance, suggestion){
+			generateReplaceCommand: function(scaytInstance, suggestion) {
 				var replacement = suggestion,
 					self = this;
-				return function(){
+
+				return function() {
 					editor.focus(); // ~ fix bug with focus
-					scaytInstance.replaceSelectionNode({ word: replacement });
+					scaytInstance.replaceSelectionNode({word: replacement});
 					self.addUndoLevelAfterReplaceCommand(editor);
 				};
 			},
-			generateMenuItemsForSuggestion: function(suggestions /*Array*/){
-				var scaytInstance = scayt.getScayt(editor);
+			generateMenuItemsForSuggestion: function(suggestions /*Array*/) {
+				var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
 
-				for(var i = 0; i < suggestions.length; i++){
-					this.registerMenuItem(suggestions[i], {
-						text: suggestions[i],
-						onclick: this.generateReplaceCommand(scaytInstance, suggestions[i])
+				if(suggestions.length === 0 || suggestions[0] === 'no_any_suggestions') {
+					this.registerMenuItem('no_any_suggestions', {
+						text: utils.getLang('no_any_suggestions', 'No suggestions'),
+						onclick: function() {
+							return false;
+						}
 					});
+				} else {
+					for(var i = 0; i < suggestions.length; i++) {
+						this.registerMenuItem(suggestions[i], {
+							text: suggestions[i],
+							onclick: this.generateReplaceCommand(scaytInstance, suggestions[i])
+						});
+					}
 				}
 			},
-			generateSubMenuForMoreSuggestions: function(suggestions /*Array*/){
-				var scaytInstance = scayt.getScayt(editor),
+			generateSubMenuForMoreSuggestions: function(suggestions /*Array*/) {
+				var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor),
 					menuList = [];
 
-				for(var i = 0; i < suggestions.length; i++){
+				for(var i = 0; i < suggestions.length; i++) {
 					menuList.push({
 						text: suggestions[i],
 						onclick: this.generateReplaceCommand(scaytInstance, suggestions[i])
@@ -533,56 +843,71 @@
 
 				return menuList;
 			},
-			generateMoreSuggestionsItem: function(suggestions /*Array*/){
+			generateMoreSuggestionsItem: function(suggestions /*Array*/) {
 				var self = this,
+					moreSuggestionsSubMenu,
 					listItem;
 
-				if (self.generateSubMenuForMoreSuggestions(suggestions)[0] && self.generateSubMenuForMoreSuggestions(suggestions)[0].text) {
-					listItem = self.generateSubMenuForMoreSuggestions(suggestions)[0].text == 'no_any_suggestions' ? null : self.generateSubMenuForMoreSuggestions(suggestions);
+				moreSuggestionsSubMenu = self.generateSubMenuForMoreSuggestions(suggestions);
+
+				if(moreSuggestionsSubMenu[0] && moreSuggestionsSubMenu[0].text) {
+					listItem = moreSuggestionsSubMenu[0].text == 'no_any_suggestions' ? null : moreSuggestionsSubMenu;
 				}
 
-				if (listItem === null) {
+				if(listItem == null) {
 					return;
 				}
-					
+
 				editor.addMenuItem('moreSuggestions', {
-					text: utils.getLang('cm_more_suggestions','More suggestions'),
+					text: utils.getLang('cm_more_suggestions', 'More suggestions'),
 					menu: listItem
 				});
 			},
 			registerControlItems: function() {
 				editor.addMenuItem('ignore', {
 					text: utils.getLang('cm_ignore_word','Ignore'),
-					onclick: function(){
-						var scaytInstance = scayt.getScayt(editor);
-						scaytInstance.ignoreWord();
+					onclick: function() {
+						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
+
+						editor.focus(); // ~ fix bug with focus
+						setTimeout(function() {
+							scaytInstance.ignoreWord();
+						}, 0);
 					}
 				});
 
 				editor.addMenuItem('ignoreall', {
 					text: utils.getLang('cm_ignore_all','Ignore all'),
-					onclick: function(){
-						var scaytInstance = scayt.getScayt(editor);
-						scaytInstance.ignoreAllWords();
+					onclick: function() {
+						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
+
+						editor.focus(); // ~ fix bug with focus
+						setTimeout(function() {
+							scaytInstance.ignoreAllWords();
+						}, 0);
 					}
 				});
 
 				editor.addMenuItem('add', {
 					text: utils.getLang('cm_add_word','Add word'),
-					onclick: function(){
-						var scaytInstance = scayt.getScayt(editor);
-						scaytInstance.addWordToUserDictionary();
+					onclick: function() {
+						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
+
+						editor.focus(); // ~ fix bug with focus
+						setTimeout(function() {
+							scaytInstance.addWordToUserDictionary();
+						}, 0);
 					}
 				});
 
 				editor.addMenuItem('aboutscayt', {
 					text: utils.getLang('cm_about','About SCAYT'),
-					onclick: function(data){
-						var scayt_ui_tabs = editor.settings && typeof editor.settings.scayt_ui_tabs === 'string' ? editor.settings.scayt_ui_tabs.split(",") : editor.settings.scayt_ui_tabs,
-							aboutTabIndex = scayt_ui_tabs.length;
+					onclick: function(data) {
+						var scayt_uiTabs = editor.settings.scayt_uiTabs,
+							aboutTabIndex = scayt_uiTabs.length;
 
-						tinymce.each(scayt_ui_tabs, function(item) {
-							if (scayt_ui_tabs.length !== 0 && parseInt(item) === 0) {
+						tinymce.each(scayt_uiTabs, function(item) {
+							if(parseInt(item) == 0) {
 								aboutTabIndex--;
 							}
 						});
@@ -592,11 +917,11 @@
 				});
 
 				editor.addMenuItem('no_any_suggestions', {
-					text: 'No suggestions',
-					onPostRender: function(data){
+					text: utils.getLang('no_any_suggestions', 'No suggestions'),
+					onPostRender: function(data) {
 						data.control.disabled(true);
 					},
-					onclick: function(){
+					onclick: function() {
 						return;
 					}
 				});
@@ -610,26 +935,26 @@
 
 				getToName = function(aLangCode) {
 					var langCode = typeof aLangCode === 'string' ? aLangCode : '"' + aLangCode + '"';
-					
-					if (codeList.hasOwnProperty(langCode)) {
+
+					if(codeList.hasOwnProperty(langCode)) {
 						return codeList[langCode];
 					}
 				};
 				getToCode = function(aLangName) {
 					 var langName = typeof aLangName === 'string' ? aLangName : '"' + aLangName + '"';
 
-					for (var code in codeList) {
-						if (codeList[code] == langName) {
+					for(var code in codeList) {
+						if(codeList[code] == langName) {
 							return code;
 						}
-					}		
+					}
 				};
 				makeLanguageList = function(aLangList) {
 					langList = aLangList;
 
-					for (var langGroup in langList) {
-						if (langList.hasOwnProperty(langGroup)) {
-							for (var langCode in langList[langGroup]) {
+					for(var langGroup in langList) {
+						if(langList.hasOwnProperty(langGroup)) {
+							for(var langCode in langList[langGroup]) {
 								codeList[langCode] = langList[langGroup][langCode];
 							}
 						}
@@ -648,7 +973,7 @@
 			dictionaryButtons: [],
 			definitionDataControl: {
 				nodes: {},
-				setInstances: function(data, name) { 
+				setInstances: function(data, name) {
 					return this.nodes[name] = data;
 				},
 				getInstances: function(name) {
@@ -667,13 +992,13 @@
 				var optionsList = this,
 					changedOptions = {};
 
-				for (var item in optionsList) {
-					if (optionsList.hasOwnProperty(item)) {
+				for(var item in optionsList) {
+					if(optionsList.hasOwnProperty(item)) {
 						changedOptions[item] = optionsList[item];
 					}
 				}
 
-				if (definitionDialog.langState.isChanged()) {
+				if(definitionDialog.langState.isChanged()) {
 					changedOptions[definitionDialog.langState.id] = definitionDialog.langState.selectLang;
 				}
 
@@ -684,7 +1009,7 @@
 					text: utils.getLang('tb_menu_options','SCAYT Options'),
 					identification: 'options',
 					menuItemIndex: 0,
-					onclick: function(data){
+					onclick: function(data) {
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				},
@@ -692,7 +1017,7 @@
 					text: utils.getLang('tb_menu_languages','SCAYT Languages'),
 					identification: 'languages',
 					menuItemIndex: 1,
-					onclick: function(data){
+					onclick: function(data) {
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				},
@@ -700,7 +1025,7 @@
 					text: utils.getLang('tb_menu_dictionaries','SCAYT Dictionaries'),
 					identification: 'dictionary',
 					menuItemIndex: 2,
-					onclick: function(data){
+					onclick: function(data) {
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				},
@@ -708,7 +1033,7 @@
 					text: utils.getLang('tb_menu_about','About SCAYT'),
 					identification: 'about',
 					menuItemIndex: 3,
-					onclick: function(data){
+					onclick: function(data) {
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				}
@@ -723,7 +1048,7 @@
 					{checked: false, name: 'ignore-words-with-numbers', text: utils.getLang('label_mixedWithDigits','Ignore Words with Numbers')}
 				];
 
-				for (var i = 0; i < createCheckbox.length; i++) {
+				for(var i = 0; i < createCheckbox.length; i++) {
 					createCheckbox[i].checked = optionList[createCheckbox[i].name];
 				}
 
@@ -734,12 +1059,12 @@
 					renderLang,
 					languageList = aLanguages || {},
 					currentLang = aCurrentLanguage || 'en_US';
-				
+
 				this.langState.currentLang = currentLang;
 
 				languageList = utils.registerLanguages.makeLanguageList(languageList);
-				
-				for (var langName in languageList) {
+
+				for(var langName in languageList) {
 					createCheckbox.push({
 						checked: langName === currentLang ? true : false,
 						name: langName,
@@ -764,15 +1089,15 @@
 				self.removeDictionaryButtons();
 				self.definitionDataControl.getInstances('dic_buttons').append(self.getDictionaryButtons());
 			},
-			getDictionaryButtons: function() { 
+			getDictionaryButtons: function() {
 				var self = this;
 				return self.dictionaryButtons;
-			},	
+			},
 			removeDictionaryButtons: function() {
 				var self = this,
 					items = self.definitionDataControl.getInstances('dic_buttons').items();
 
-				for (var i = items.length - 1; i >= 0; i--) {
+				for(var i = items.length - 1; i >= 0; i--) {
 					items[i].remove();
 				}
 			},
@@ -781,8 +1106,8 @@
 					items = self.generateDictionaryButtons(),
 					showItems = aIds.split('|') || '';
 
-				for (var i = 0; i < showItems.length; i++) {
-					for (var j = 0; j < items.length; j++) {
+				for(var i = 0; i < showItems.length; i++) {
+					for(var j = 0; j < items.length; j++) {
 						if(items[j].name == showItems[i]) {
 							items[j]['disabled'] = false;
 						}
@@ -792,19 +1117,19 @@
 				self.dictionaryButtons = items;
 			},
 			initDictionaryNameAndButtons: function(dicName) {
-				var self = this, 
+				var self = this,
 					dictionaryValue = '',
 					dictionaryButtonLocation = [
 						"Create|Restore",
 						"Rename|Remove"
 					];
 
-				if (dicName !== undefined && dicName !== "null" && dicName !== "") {
+				if(dicName !== undefined && dicName !== "null" && dicName !== "") {
 					dictionaryValue = dicName;
 					self.toggleDictionaryButtons(dictionaryButtonLocation[1]);
 				} else {
 					dictionaryValue = '';
-					self.toggleDictionaryButtons(dictionaryButtonLocation[0]);		
+					self.toggleDictionaryButtons(dictionaryButtonLocation[0]);
 				}
 
 				return dictionaryValue;
@@ -812,7 +1137,7 @@
 			handlerDictionaryButtons: function(data) {
 				var self = this;
 
-				if (data && data.target.tagName === 'BUTTON' && data.control.disabled() !== true) {
+				if(data && data.target.tagName === 'BUTTON' && data.control.disabled() !== true) {
 					var cmd = data.control.aria('role').toLowerCase();
 					self.manageCommandButtons[cmd]();
 				}
@@ -821,18 +1146,18 @@
 				return !document.getElementById('messageBox').innerHTML;
 			},
 			dicSuccessMessage: function(message) {
-				 if (message) {
+				if(message) {
 					document.getElementById('messageBox').style.color = "green";
 					document.getElementById('messageBox').innerHTML = message;
-				 }
-				 return '';
+				}
+				return '';
 			},
 			dicErrorMessage:  function(message) {
-				if (message) {
+				if(message) {
 					document.getElementById('messageBox').style.color = "red";
 					document.getElementById('messageBox').innerHTML = message;
-				 }
-				 return '';
+				}
+				return '';
 			},
 			removeMessage: function() {
 				var self = this;
@@ -841,105 +1166,109 @@
 			manageCommandButtons: {
 				create: function() {
 					var self = this;
-					var scayt_control = scayt.getScayt(editor);
+					var _SCAYT = tinymce.plugins.SCAYT;
+					var scayt_control = _SCAYT.getScayt(editor);
 					var err_massage = utils.getLang('dic_err_dic_create', 'The Dictionary %s cannot be created');
 					var suc_massage = utils.getLang('dic_succ_dic_create', 'The Dictionary %s has been successfully created');
 
-					scayt_control.createUserDictionary(definitionDialog.getDictionaryName(), function(response){
+					scayt_control.createUserDictionary(definitionDialog.getDictionaryName(), function(response) {
 
 						definitionDialog.initDictionaryNameAndButtons(response.name);
-						if(!response.error){
+						if(!response.error) {
 							definitionDialog.setDictionaryButtons();
 							suc_massage = suc_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicSuccessMessage(suc_massage);
-						}else{
+						} else {
 							definitionDialog.setDictionaryButtons();
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-						}
+					   }
 
-					}, function(error){
+					}, function(error) {
 						err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 						definitionDialog.dicErrorMessage( err_massage );
 					});
 				},
 				restore: function() {
 					var self = this;
-					var scayt_control = scayt.getScayt(editor);
+					var _SCAYT = tinymce.plugins.SCAYT;
+					var scayt_control = _SCAYT.getScayt(editor);
 					var err_massage = utils.getLang('dic_err_dic_restore', 'The Dictionary %s cannot be restored');
 					var suc_massage = utils.getLang('dic_succ_dic_restore', 'The Dictionary %s has been successfully restored');
 
-					scayt_control.restoreUserDictionary(definitionDialog.getDictionaryName(), function(response){
+					scayt_control.restoreUserDictionary(definitionDialog.getDictionaryName(), function(response) {
 
 						definitionDialog.initDictionaryNameAndButtons(response.name);
-						if(!response.error){
+						if(!response.error) {
 							definitionDialog.setDictionaryButtons();
 							suc_massage = suc_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicSuccessMessage(suc_massage);
-						}else{
+						} else {
 							definitionDialog.setDictionaryButtons();
 								err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 								definitionDialog.dicErrorMessage( err_massage );
-						}
-					}, function(error){
+					   }
+					}, function(error) {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
 					});
 				},
 				rename: function() {
 					var self = this;
-					var scayt_control = scayt.getScayt(editor);
+					var _SCAYT = tinymce.plugins.SCAYT;
+					var scayt_control = _SCAYT.getScayt(editor);
 					var err_massage = utils.getLang('dic_err_dic_rename', "The Dictionary %s cannot be renamed");
 					var suc_massage = utils.getLang('dic_succ_dic_rename', 'The Dictionary %s has been successfully renamed');
 
-					scayt_control.renameUserDictionary(definitionDialog.getDictionaryName(), function(response){
+					scayt_control.renameUserDictionary(definitionDialog.getDictionaryName(), function(response) {
 
 						definitionDialog.initDictionaryNameAndButtons(response.name);
-						if(!response.error){
+						if(!response.error) {
 							definitionDialog.setDictionaryButtons();
 							suc_massage = suc_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.setDictionaryName(definitionDialog.getDictionaryName());
 							definitionDialog.dicSuccessMessage(suc_massage);
-						}else{
+						} else {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-						}
-						
-					}, function(error){
+					   }
+
+					}, function(error) {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.setDictionaryName(definitionDialog.getDictionaryName());
-							definitionDialog.dicErrorMessage( err_massage );  
+							definitionDialog.dicErrorMessage( err_massage );
 					});
 				},
 				remove: function() {
 					var self = this;
-					var scayt_control = scayt.getScayt(editor);
+					var _SCAYT = tinymce.plugins.SCAYT;
+					var scayt_control = _SCAYT.getScayt(editor);
 					var err_massage = utils.getLang('dic_err_dic_remove', 'The Dictionary %s cannot be removed');
 					var suc_massage = utils.getLang('dic_succ_dic_remove', 'The Dictionary %s has been successfully removed');
 
-					scayt_control.removeUserDictionary(definitionDialog.getDictionaryName(), function(response){
-						
+					scayt_control.removeUserDictionary(definitionDialog.getDictionaryName(), function(response) {
+
 						definitionDialog.resetDictionaryName();
 						definitionDialog.initDictionaryNameAndButtons(definitionDialog.getDictionaryName());
-					   
+
 						if(!response.error) {
 							definitionDialog.setDictionaryButtons();
 							suc_massage = suc_massage.replace("%s" , ('"'+ response.name +'"') );
 							definitionDialog.dicSuccessMessage(suc_massage);
 						} else {
 							err_massage = err_massage.replace("%s" , ('"'+ response.name +'"') );
-							definitionDialog.dicErrorMessage( err_massage );   
-						}
-						
-					}, function(error){
+							definitionDialog.dicErrorMessage( err_massage );
+					   }
+
+					}, function(error) {
 							err_massage = err_massage.replace("%s" , ('"'+ definitionDialog.getDictionaryName() +'"') );
-							definitionDialog.dicErrorMessage( err_massage );   
-					});	
+							definitionDialog.dicErrorMessage( err_massage );
+					});
 				}
 			},
 			getDictionaryName: function() {
 				var self = this;
-				return self.definitionDataControl.getInstances('dic_textarea').value();		
+				return self.definitionDataControl.getInstances('dic_textarea').value();
 			},
 			setDictionaryName: function(dictionaryName) {
 				var self = this;
@@ -957,9 +1286,9 @@
 					each = tinymce.each,
 					tabs = null,
 					ed = editor,
+					_SCAYT = tinymce.plugins.SCAYT,
 					settings = ed.settings,
-					showUITab = settings.scayt_ui_tabs = utils.getParameter('scayt_ui_tabs');
-					showUITab = (typeof showUITab === 'object') ? showUITab : showUITab.split(",");
+					showUITab = settings.scayt_uiTabs;
 
 				tabs = [
 					{
@@ -974,7 +1303,7 @@
 							role: 'checkbox',
 							style: 'overflow: hidden; cursor: pointer;'
 						},
-						items: definitionDialog.generateOptionsCheckbox(scayt.getOptions(ed))
+						items: definitionDialog.generateOptionsCheckbox(_SCAYT.getOptions(ed))
 					},
 					{
 						title: utils.getLang('tab_languages','Languages'),
@@ -997,16 +1326,16 @@
 									label: ' ',
 									style: 'overflow: hidden; cursor: pointer;'
 								},
-								items: definitionDialog.generateLanguagesCheckbox(scayt.getLanguages(ed), scayt.getCurrentLanguage(ed)),
+								items: definitionDialog.generateLanguagesCheckbox(_SCAYT.getLanguages(ed), _SCAYT.getCurrentLanguage(ed)),
 								onClick: function(data) {
 									var control = data.control,
 										items;
 
-									if(data && control.aria('role') != "container"){
-										if (control.checked()) {
+									if(data && control.aria('role') != "container") {
+										if(control.checked()) {
 											items = control.parent().toJSON();
 
-											for (var item in items) {
+											for(var item in items) {
 												items[item] = false;
 											}
 
@@ -1015,7 +1344,7 @@
 											control.parent().fromJSON(items);
 										}
 									}
-									
+
 								}
 							}
 						]
@@ -1029,9 +1358,9 @@
 						items: [
 							{
 								label: utils.getLang('dic_dictionary_name','Dictionary Name'),
-								type: 'textbox', 
+								type: 'textbox',
 								role: 'dic_textbox',
-								value: definitionDialog.setDictionaryName(scayt.getUserDictionaryName(ed)),
+								value: definitionDialog.setDictionaryName(_SCAYT.getUserDictionaryName(ed)),
 								onPostRender: function(data) {
 									definitionDialog.definitionDataControl.setInstances(data.control, 'dic_textarea');
 								}
@@ -1057,8 +1386,8 @@
 								role: 'fieldset',
 								style: 'border: none;padding-top: 20px;',
 								html: '<div id="infoBlock" style="white-space: normal;text-align: justify;"><div id="messageBox"></div>'+
-											utils.getLang('dic_about_info','Initially a User Dictionary is stored in a cookie. However, cookies are limited in size. When a User Dictionary grows to a point where it cannot be stored in a cookie, the dictionary may be stored on our server. To store your personal dictionary on our server, you should specify a name for it. If you already have a stored dictionary, please type its name and click the Restore button.')											  
-									+'</div>'
+											utils.getLang('dic_about_info','Initially a User Dictionary is stored in a cookie. However, cookies are limited in size. When a User Dictionary grows to a point where it cannot be stored in a cookie, the dictionary may be stored on our server. To store your personal dictionary on our server, you should specify a name for it. If you already have a stored dictionary, please type its name and click the Restore button.')
+									+ '</div>'
 							}
 
 						]
@@ -1079,11 +1408,11 @@
 					}
 				];
 
-				// Create tab list with depends on scayt_ui_tabs settings
+				// Create tab list with depends on scayt_uiTabs settings
 				each(tabs, function(tab, index) {
-					if (tab.identification && !!parseInt(showUITab[index])) {
+					if(tab.identification && !!parseInt(showUITab[index])) {
 						items.push(tab);
-					} else if(tab.identification == 'about'){
+					} else if(tab.identification == 'about') {
 						items.push(tab);
 					}
 				});
@@ -1092,7 +1421,7 @@
 			},
 			openDialog: function(aEditor, aData, aIdOpenTab) {
 				var self = this,
-					openTabWithId = aIdOpenTab || 0;		
+					openTabWithId = aIdOpenTab || 0;
 
 				return aEditor.windowManager.open({
 					title: utils.getLang('title','SpellCheckAsYouType'),
@@ -1102,22 +1431,22 @@
 					resizable: 'true',
 					role: 'tabpanel',
 					bodyType: 'tabpanel',
-					onPostRender: function(data){
+					onPostRender: function(data) {
 						var self = this,
 							titleContainerId = this._id + '-head',
 							titleContainer = document.getElementById(titleContainerId),
 							title = titleContainer.getElementsByTagName('DIV');
-						
+
 						// Create small font for header dialog window
-						for (var i = title.length - 1; i >= 0; i--) {
-							if (title[i].className == 'mce-title') {
+						for(var i = title.length - 1; i >= 0; i--) {
+							if(title[i].className == 'mce-title') {
 								title[i].style.fontSize = '15px';
 							}
 							continue;
 						}
 
 						// Opening tab depends on the selected menu item
-						//if (openTabWithId !== 0) {
+						//if(openTabWithId !== 0) {
 							self.items()[0].activateTab(openTabWithId);
 						//};
 
@@ -1125,201 +1454,42 @@
 
 					},
 					onSubmit: function(data) {
-						var scayt_instance = scayt.getScayt(editor);
+						var scaytInstance = tinymce.plugins.SCAYT.getScayt(editor);
 						var changedOptions = definitionDialog.getChangedOptions.call(data.data);
-						scayt_instance.commitOption({changedOptions: changedOptions});
+
+						scaytInstance.commitOption({changedOptions: changedOptions});
 					},
 					body: self.definitionWindowDialog(editor)
 				});
 			},
 			aboutTemplate: function() {
-				var scayt_instance = scayt.getScayt(editor);
-				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scayt_instance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scayt_instance.getLocal('version') + scayt.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2014 SpellChecker.net, All Rights Reserved.") +'</div>';
+				var _SCAYT = tinymce.plugins.SCAYT,
+					scaytInstance = _SCAYT.getScayt(editor);
+
+				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" target="_blank" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2014 SpellChecker.net, All Rights Reserved.") +'</div>';
 			}
 		};
 
-		var scayt = {
-			toolbarScaytTabs: null,
-			isLoadingStarted: false,
-			defaultScript: editor.settings.scayt_custom_url,
-			startingStack: [],
-			onScaytReady: false,
-			isScaytReady: false,
-			suggestions: [],
-			loaded: false,
-			isScriptLoaded: function(){
-				var self = this;
-				var scripts = dom.doc.getElementsByTagName("script");
-
-				
-				for(var i = 0; i < scripts.length; i++ ){
-					if(scripts[i].src == editor.settings.scayt_custom_url){
-						return true;
-					}
-				}
-
-				return false;
-			},
-			loadScaytLibriary: function(ed){
-				var self = this,
-					editor = ed,
-					protocol = document.location.protocol,
-					baseUrl  = editor.settings.scayt_custom_url;
-
-				protocol = protocol.search( /https?:/) != -1? protocol : 'http:';
-				baseUrl = baseUrl.search(/^\/\//) === 0 ? protocol + baseUrl : baseUrl;
-
-				var pushInStartingStack = function(editor, scope) {
-					var that = scope;
-
-					if(editor.settings.scayt_auto_startup){
-						that.startingStack.push(editor.id);
-					}
-				};
-
-				// script it is not loaded
-				if(!self.isScriptLoaded() && (typeof window.SCAYT === "undefined" || (typeof window.SCAYT !== "undefined" && typeof window.SCAYT.TINYMCE !== "function")) && !self.isScaytReady && !tinymce.isLoadingStarted){
-
-					var scriptLoader = new tinymce.dom.ScriptLoader();
-
-					tinymce.isLoadingStarted = true;
-					scriptLoader.add(baseUrl);
-					scriptLoader.loadQueue(function(){
-						pushInStartingStack(editor, self);
-						self.isScaytReady = true;
-						tinymce.isLoadingStarted = false;
-						editor.fire('onScaytReady', editor);
-					});
-
-				// script it is loaded
-				}else if(typeof window.SCAYT !== "object" &&  typeof window.SCAYT !== "undefined" && typeof window.SCAYT.TINYMCE === "function"){
-
-					pushInStartingStack(editor, self);
-					editor.fire('onScaytReady', editor);
-
-				}else if(tinymce.isLoadingStarted){
-
-					pushInStartingStack(editor, self);
-				}
-				
-			},
-			createScayt : function( editor ) {
-				var self = this,
-					_scaytInstance = {};
-
-				if(self.getScayt(editor).enabled) {
-					return;
-				}
-
-				var _scaytInstanceOptions = {
-					debug 				: editor.settings.scayt_debug || false,
-					lang 				: editor.settings.scayt_slang,
-					container 			: (editor.getContentAreaContainer() && editor.getContentAreaContainer().children[0]) ? editor.getContentAreaContainer().children[0] : editor.getElement(),
-					customDictionary	: editor.settings.scayt_custom_dic_ids,
-					userDictionaryName 	: editor.settings.scayt_user_dic_name,
-					localization		: editor.langCode,
-					customer_id			: editor.settings.scayt_customer_id
-				};
-
-				var t = editor.settings.scayt_service_protocol;
-				if (editor.settings.scayt_service_protocol) {
-					_scaytInstanceOptions['service_protocol'] = editor.settings.scayt_service_protocol;
-				}
-
-				if (editor.settings.scayt_service_host) {
-					_scaytInstanceOptions['service_host'] = editor.settings.scayt_service_host;
-				}
-
-				if (editor.settings.scayt_service_port) {
-					_scaytInstanceOptions['service_port'] = editor.settings.scayt_service_port;
-				}
-
-				if (editor.settings.scayt_service_path) {
-					_scaytInstanceOptions['service_path'] = editor.settings.scayt_service_path;
-				}
-				
-				_scaytInstance = new SCAYT.TINYMCE(_scaytInstanceOptions,
-					function() {
-						_scaytInstance.enabled = true;
-					},
-					function() {
-
-				});
-
-				_scaytInstance.subscribe("suggestionListSend", function(data) {
-					// TODO: maybe store suggestions for specific editor 
-					self.suggestions = data.suggestionList;
-				});
-				//_scaytInstance.enabled = !_scaytInstance.enabled || true;
-				
-				if(typeof tinymce.editors[editor.id].plugins["scayt"].instances !== "object"){
-					tinymce.editors[editor.id].plugins["scayt"].instances = {};
-				}
-				tinymce.editors[editor.id].plugins["scayt"].instances[editor.id] = _scaytInstance;
-			},
-			destroy: function(editor) {
-				var self = this,
-					scaytInstance = self.getScayt(editor);
-
-				if(scaytInstance.enabled !== false) {	
-					scaytInstance.destroy();
-				}
-			},
-			getScayt : function( editor ) {	
-				var scaytInstance = false;
-				
-				if(editor.plugins["scayt"].instances) {
-					scaytInstance =  editor.plugins["scayt"].instances[editor.id] || { enabled : false };	
-				}
-
-				return scaytInstance;
-			},
-			isScaytEnabled : function( editor ) {
-				var scayt_instance = this.getScayt( editor );
-				return !( scayt_instance && scayt_instance.enabled ) ? false : true;
-			},
-			getOptions: function(editor) {
-				var scayt_instance = scayt.getScayt( editor );
-				return scayt_instance.getApplicationConfig();
-			},
-			getCurrentLanguage: function(editor){
-				var scayt_instance = this.getScayt( editor );
-				return scayt_instance.getLang();
-			},
-			getLanguages: function(editor) {
-				var scayt_instance = this.getScayt( editor );
-				return scayt_instance.getLangList();
-			},
-			getUserDictionaryName: function(editor) {
-				var scayt_instance = this.getScayt( editor );
-				return scayt_instance.getUserDictionaryName();	
-			},
-			getVersion: function(editor) {
-				var scayt_instance = this.getScayt( editor );
-				return '3.0.0';
-			},
-			removeMarkupFromWord: function(editor) {
-				var self = this,
-					scaytInstance = self.getScayt(editor);
-
-				if(scaytInstance.enabled !== false) {	
-					scaytInstance.removeMarkupFromWord();
-				}
-			},
-			removeMarkupFromString: function(editor, str) {
-				var self = this,
-					scaytInstance = self.getScayt(editor);
-
-				if(scaytInstance && scaytInstance.enabled !== false) {
-					return scaytInstance.removeMarkupFromString(str);
-				}
-
-				return str;
-			},
-			markupStarted: function(editor) { }
-		};
-		
 		toolbarButton.init(editor);
 		contextMenu.createScaytMenuItem();
+	});
+
+	// Handle 'onScaytReady' callback
+	tinymce.on('onScaytReady', function(editor) {
+		// override editor dirty checking behaviour
+		tinymce.EditorManager.Editor.prototype.isDirty = function() {
+			var scaytInstance = tinymce.plugins.SCAYT.getScayt(this),
+				startContent, getContent;
+
+			if(scaytInstance) {
+				startContent = tinymce.trim(scaytInstance.removeMarkupFromString(this.startContent));
+				getContent = tinymce.trim(scaytInstance.removeMarkupFromString(this.getContent({format : 'raw', no_events : 1})));
+			} else {
+				startContent = tinymce.trim(this.startContent);
+				getContent = tinymce.trim(this.getContent({format : 'raw', no_events : 1}));
+			}
+
+			return (getContent != startContent) && !this.isNotDirty;
+		};
 	});
 }());

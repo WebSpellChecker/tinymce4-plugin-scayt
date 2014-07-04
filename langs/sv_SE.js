@@ -4,8 +4,9 @@
 	title: 'Stavningskontroll medan du skriver',
 	desc:'Stavningskontroll medan du skriver',
 
-	cm_add_word:'Lägg till ord',  
+	cm_add_word:'Lägg till ord',
 	cm_more_suggestions: 'Fler förslag',
+	no_any_suggestions: 'No suggestions',
 	cm_ignore_word:'Ignorera',
 	cm_ignore_all: 'Ignorera alla',
 	cm_about: 'Om SCAYT',
@@ -15,7 +16,7 @@
 	tb_menu_dictionaries: 'Ordlistor',
 	tb_menu_about: 'Om SCAYT',
 
-	tb_button_title_enable: 'Aktivera SCAYT', 
+	tb_button_title_enable: 'Aktivera SCAYT',
 	tb_button_title_disable: 'Inaktivera SCAYT',
 
 	tab_options : 'Inställningar',
@@ -26,7 +27,7 @@
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Ignorera alla ord med enbart versaler",
 	label_ignoreDomainNames: "Ignorera domännamn",
 	label_mixedCase: "Ignorera ord med blandat shiftläge",
@@ -36,7 +37,7 @@
 	about_version_num: "3.0.0",
 	about_throwt_copy: "&copy; <a style='text-decoration: underline;cursor:pointer;color:#00f' href='http://www.webspellchecker.net/' target='_blank'>1999-2014 SpellChecker.net, Inc.</a><br />All Rights Reserved.",
 	about_help: "SCAYT help",
-	
+
 	dic_dictionary_name: "Ordlistans namn",
 	dic_about_info: "Inledningsvis lagras ordlistan i en cookie. När ordlista växer till en punkt där det inte kan lagras i en cookie, lagras den på vår server. För att lagra din personliga ordlista på vår server du ska ange ett namn för din ordbok. Om du redan har en lagrad ordbok, skriv namnet och klicka på knappen Återställ.",
 	dic_create: "Skapa",

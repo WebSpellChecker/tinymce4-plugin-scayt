@@ -5,7 +5,8 @@
 	desc:'Stavekontrol mens du skriver',
 
 	cm_more_suggestions: 'Flere forslag',
-	cm_add_word:'Tilføj ord',  
+	no_any_suggestions: 'No suggestions',
+	cm_add_word:'Tilføj ord',
 	cm_ignore_word:'Ignorér',
 	cm_ignore_all: 'Ignorér alle',
 	cm_about: 'Om SCAYT',
@@ -15,7 +16,7 @@
 	tb_menu_dictionaries: 'SCAYT Ordbøger',
 	tb_menu_about: 'Om SCAYT',
 
-	tb_button_title_enable: 'Aktivér SCAYT', 
+	tb_button_title_enable: 'Aktivér SCAYT',
 	tb_button_title_disable: 'Deaktivér SCAYT',
 
 	tab_options : 'Indstillinger',
@@ -26,12 +27,12 @@
 	disabled_alert:"SpellCheckAsYouType (SCAYT) is disabled. Enable to proceed.",
 
 	title_empty: '',
-	
+
 	label_allCaps: "Ignorer alle store bogstaver",
 	label_ignoreDomainNames: "Ignorér domænenavne",
 	label_mixedCase: "Ignorer ord med store og små bogstaver",
 	label_mixedWithDigits: "Ignorér ord med numre",
-	
+
 	about_version: "Version",
 	about_version_num: "3.0.0",
 	about_throwt_copy: "&copy; <a style='text-decoration: underline;cursor:pointer;color:#00f' href='http://www.webspellchecker.net/' target='_blank'>1999-2014 SpellChecker.net, Inc.</a><br />All Rights Reserved.",
