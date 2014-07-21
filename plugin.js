@@ -109,7 +109,8 @@
 					localization		: _editor.langCode,
 					customer_id			: _editor.getParam('scayt_customerId'),
 					data_attribute_name : dataAttributeName,
-					misspelled_word_class : misspelledWordClass
+					misspelled_word_class : misspelledWordClass,
+					ignoreElementsRegex : _editor.getParam('scayt_elementsToIgnore')
 				};
 
 				if(_editor.getParam('scayt_serviceProtocol')) {
@@ -298,6 +299,10 @@
 				scayt_servicePath: {
 					type: 'string',
 					'default': null
+				},
+				scayt_elementsToIgnore: {
+					type: 'string',
+					'default': 'style'
 				}
 			},
 			parseOptions: function(editor) {
@@ -322,7 +327,7 @@
 				settings.scayt_servicePort = getParameter('scayt_servicePort');
 				settings.scayt_servicePath = getParameter('scayt_servicePath');
 
-				settings.scayt_contextCommands = utils.getParameter('scayt_contextCommands');
+				settings.scayt_contextCommands = getParameter('scayt_contextCommands');
 				if(settings.scayt_contextCommands === 'all') {
 					settings.scayt_contextCommands = optionDefinition['scayt_contextCommands']['default'];
 				} else if(settings.scayt_contextCommands === 'off') {
@@ -335,12 +340,19 @@
 				settings.scayt_contextMenuItemsOrder = settings.scayt_contextMenuItemsOrder.replace(/\s?[\|]+/g, ' ');
 
 				// prepare uiTabs parameter
-				settings.scayt_uiTabs = utils.getParameter('scayt_uiTabs').split(',');
+				settings.scayt_uiTabs = getParameter('scayt_uiTabs').split(',');
 				// lets validate our scayt_uiTabs option : now it should contain comma separated '0' or '1' symbols
 				if(settings.scayt_uiTabs.length != 3 || !utils.validateArray(settings.scayt_uiTabs, function(value) {
 					return value == 0 || value == 1;
 				})) {
 					settings.scayt_uiTabs = optionDefinition.scayt_uiTabs['default'].split(',');
+				}
+
+				if(typeof settings.scayt_elementsToIgnore === 'string' && settings.scayt_elementsToIgnore) {
+					settings.scayt_elementsToIgnore = settings.scayt_elementsToIgnore.replace(/ /g, '');
+					settings.scayt_elementsToIgnore = new RegExp('^(' + settings.scayt_elementsToIgnore.replace(/,/g, '|') + '|' + optionDefinition['scayt_elementsToIgnore']['default'] + ')$', 'i');
+				} else {
+					settings.scayt_elementsToIgnore = new RegExp('^(' + optionDefinition['scayt_elementsToIgnore']['default'] + ')$', 'i');
 				}
 
 				_SCAYT.setState(editor, settings.scayt_autoStartup);

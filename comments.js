@@ -93,6 +93,10 @@
  * Default value : [scayt_contextMenuItemsOrder='suggest|moresuggest|control'].
  * Old option name : scayt_context_menu_items_order
  *
+ * @property {String} scayt_elementsToIgnore - Specifies the names of tags that will be skipped when spellchecking. This is a string containing tag names
+ * separared by commas (','). Please note that 'style' tag would be added to specified tags list.
+ * Default value : [scayt_elementsToIgnore='style']
+ *
  * @example
  * // Show only "Add Word" and "Ignore All" in the context menu.
  * config.scayt_contextCommands = 'add,ignoreall';
@@ -136,4 +140,6 @@
  * config.scayt_autoStartup = true;
  * @example
  * config.scayt_contextMenuItemsOrder = 'moresuggest|control|suggest';
+ * @example
+ * config.scayt_elementsToIgnore = 'del,pre';
  */
