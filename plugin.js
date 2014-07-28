@@ -299,10 +299,6 @@
 				scayt_servicePath: {
 					type: 'string',
 					'default': null
-				},
-				scayt_elementsToIgnore: {
-					type: 'string',
-					'default': 'style'
 				}
 			},
 			parseOptions: function(editor) {
@@ -346,13 +342,6 @@
 					return value == 0 || value == 1;
 				})) {
 					settings.scayt_uiTabs = optionDefinition.scayt_uiTabs['default'].split(',');
-				}
-
-				if(typeof settings.scayt_elementsToIgnore === 'string' && settings.scayt_elementsToIgnore) {
-					settings.scayt_elementsToIgnore = settings.scayt_elementsToIgnore.replace(/ /g, '');
-					settings.scayt_elementsToIgnore = new RegExp('^(' + settings.scayt_elementsToIgnore.replace(/,/g, '|') + '|' + optionDefinition['scayt_elementsToIgnore']['default'] + ')$', 'i');
-				} else {
-					settings.scayt_elementsToIgnore = new RegExp('^(' + optionDefinition['scayt_elementsToIgnore']['default'] + ')$', 'i');
 				}
 
 				_SCAYT.setState(editor, settings.scayt_autoStartup);
