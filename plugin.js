@@ -109,7 +109,8 @@
 					localization		: _editor.langCode,
 					customer_id			: _editor.getParam('scayt_customerId'),
 					data_attribute_name : dataAttributeName,
-					misspelled_word_class : misspelledWordClass
+					misspelled_word_class : misspelledWordClass,
+					ignoreElementsRegex : _editor.getParam('scayt_elementsToIgnore')
 				};
 
 				if(_editor.getParam('scayt_serviceProtocol')) {
