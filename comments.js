@@ -28,7 +28,7 @@
  * Old option name : scayt_max_suggestion
  *
  * @property {String} scayt_customDictionaryIds - The parameter links SCAYT to custom dictionaries. This is a string containing dictionary IDs
- * separared by commas (',').
+ * separated by commas (',').
  * Further details at [http://wiki.webspellchecker.net/doku.php?id=installationandconfiguration:customdictionaries:licensed](http://wiki.webspellchecker.net/doku.php?id=installationandconfiguration:customdictionaries:licensed).
  * Default value : [scayt_customDictionaryIds=''].
  * Old option name : scayt_custom_dic_ids
@@ -93,7 +93,7 @@
  * Default value : [scayt_contextMenuItemsOrder='suggest|moresuggest|control'].
  * Old option name : scayt_context_menu_items_order
  *
- * @property {String} scayt_elementsToIgnore - Specifies the names of tags that will be skipped while spell checking. It is a string containing tag names separared by commas (',').
+ * @property {String} scayt_elementsToIgnore - Specifies the names of tags that will be skipped while spell checking. It is a string containing tag names separated by commas (',').
  * Please note that 'style' tag would be added to specified tags list.
  * Default value : [scayt_elementsToIgnore='style']
  *
