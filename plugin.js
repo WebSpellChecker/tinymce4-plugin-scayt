@@ -132,15 +132,24 @@
 				var scaytInstance = new SCAYT.TINYMCE(_scaytInstanceOptions,
 					function() {
 						// success callback
-
 					},
 					function() {
 						// error callback
-
-				});
+					}),
+					wordsPrefix = 'word_';
 
 				scaytInstance.subscribe('suggestionListSend', function(data) {
-					suggestions = data.suggestionList;
+					var wordsCollection = {},
+						suggestionList = [];
+
+					for(var i = 0; i < data.suggestionList.length; i++) {
+						if (!wordsCollection[wordsPrefix + data.suggestionList[i]]) {
+							wordsCollection[wordsPrefix + data.suggestionList[i]] = data.suggestionList[i];
+							suggestionList.push(data.suggestionList[i]);
+						}
+					}
+
+					suggestions = suggestionList;
 				});
 
 				instances[_editor.id] = scaytInstance;
@@ -685,7 +694,7 @@
 					self.items = [];
 
 					tinymce.each(self.contextmenu.split(/[ ,]/), function(name) {
-					var item = ed.menuItems[name];
+						var item = ed.menuItems[name];
 
 						if(name == '|') {
 							item = {text: name};
