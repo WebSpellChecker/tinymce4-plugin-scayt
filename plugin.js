@@ -248,6 +248,10 @@
 					type: 'string',
 					'default': 'en_US'
 				},
+				scayt_customerId: {
+					type: 'string',
+					'default': '1:wiN6M-YQYOz2-PTPoa2-3yaA92-PmWom-3CEx53-jHqwR3-NYK6b-XR5Uh1-M7YAp4'
+				},
 				scayt_autoStartup: {
 					type: 'boolean',
 					'default': false
@@ -310,11 +314,34 @@
 					isAllowable = utils.isAllowable;
 
 				settings.scayt_autoStartup = getParameter('scayt_autoStartup');
-				settings.scayt_customerId = editor.getParam('scayt_customerId');
 				settings.scayt_moreSuggestions = isAllowable("scayt_moreSuggestions") ? getParameter("scayt_moreSuggestions") : "off";
 				settings.scayt_maxSuggestions = utils.isNegative(getParameter('scayt_maxSuggestions')) ? optionDefinition['scayt_maxSuggestions']['default'] : getParameter('scayt_maxSuggestions');
 				settings.scayt_srcUrl = getParameter('scayt_srcUrl');
 				settings.scayt_sLang = getParameter('scayt_sLang');
+
+				settings.scayt_customerId = (function( customerId, url ) {
+
+					url = utils.getLocationInfo( url );
+					var defUrl = utils.getLocationInfo( optionDefinition['scayt_srcUrl']['default'] );
+
+					var cusId = customerId && ( typeof customerId  === optionDefinition['scayt_customerId']['type'] ) && ( customerId.length >= 50 );
+					defUrl = ( url.host === defUrl.host ) && ( url.pathname === defUrl.pathname );
+
+					if ( cusId && !defUrl) {
+						return customerId
+					}
+
+					if ( !defUrl ) {
+						return customerId
+					}
+
+					if ( !(cusId && defUrl) ) {
+						return optionDefinition['scayt_customerId']['default'];
+					}
+
+					return customerId
+					
+				})( editor.getParam('scayt_customerId'),  settings.scayt_srcUrl)
 
 				settings.scayt_customDictionaryIds = getParameter('scayt_customDictionaryIds');
 				settings.scayt_userDictionaryName = getParameter('scayt_userDictionaryName');
@@ -734,6 +761,19 @@
 		};
 
 		var utils = {
+			getLocationInfo: function(path) {
+
+				// path: 'file:///D:/Dev/WSC/SCAYTv3/apps/ckscayt/' or 'https://www.google.com.ua'
+				var a = document.createElement('a');
+				a.href = path;
+
+				return {
+					protocol: a.protocol.replace(/:/, ''),
+					host: a.host.split(':')[0],
+					port: a.port == "0" ? "80" : a.port, // Safari 5 always return '0' when port implicitly equals '80'
+					pathname: a.pathname.replace(/^\//, '')
+				};
+			},
 			isInteger: function(num) {
 				return (num ^ 0) === num;
 			},
