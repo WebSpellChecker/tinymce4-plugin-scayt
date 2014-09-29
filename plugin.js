@@ -132,15 +132,24 @@
 				var scaytInstance = new SCAYT.TINYMCE(_scaytInstanceOptions,
 					function() {
 						// success callback
-
 					},
 					function() {
 						// error callback
-
-				});
+					}),
+					wordsPrefix = 'word_';
 
 				scaytInstance.subscribe('suggestionListSend', function(data) {
-					suggestions = data.suggestionList;
+					var wordsCollection = {},
+						suggestionList = [];
+
+					for(var i = 0; i < data.suggestionList.length; i++) {
+						if (!wordsCollection[wordsPrefix + data.suggestionList[i]]) {
+							wordsCollection[wordsPrefix + data.suggestionList[i]] = data.suggestionList[i];
+							suggestionList.push(data.suggestionList[i]);
+						}
+					}
+
+					suggestions = suggestionList;
 				});
 
 				instances[_editor.id] = scaytInstance;
@@ -248,6 +257,10 @@
 					type: 'string',
 					'default': 'en_US'
 				},
+				scayt_customerId: {
+					type: 'string',
+					'default': '1:wiN6M-YQYOz2-PTPoa2-3yaA92-PmWom-3CEx53-jHqwR3-NYK6b-XR5Uh1-M7YAp4'
+				},
 				scayt_autoStartup: {
 					type: 'boolean',
 					'default': false
@@ -310,11 +323,34 @@
 					isAllowable = utils.isAllowable;
 
 				settings.scayt_autoStartup = getParameter('scayt_autoStartup');
-				settings.scayt_customerId = editor.getParam('scayt_customerId');
 				settings.scayt_moreSuggestions = isAllowable("scayt_moreSuggestions") ? getParameter("scayt_moreSuggestions") : "off";
 				settings.scayt_maxSuggestions = utils.isNegative(getParameter('scayt_maxSuggestions')) ? optionDefinition['scayt_maxSuggestions']['default'] : getParameter('scayt_maxSuggestions');
 				settings.scayt_srcUrl = getParameter('scayt_srcUrl');
 				settings.scayt_sLang = getParameter('scayt_sLang');
+
+				settings.scayt_customerId = (function( customerId, url ) {
+
+					url = utils.getLocationInfo( url );
+					var defUrl = utils.getLocationInfo( optionDefinition['scayt_srcUrl']['default'] );
+
+					var cusId = customerId && ( typeof customerId  === optionDefinition['scayt_customerId']['type'] ) && ( customerId.length >= 50 );
+					defUrl = ( url.host === defUrl.host ) && ( url.pathname === defUrl.pathname );
+
+					if ( cusId && !defUrl) {
+						return customerId
+					}
+
+					if ( !defUrl ) {
+						return customerId
+					}
+
+					if ( !(cusId && defUrl) ) {
+						return optionDefinition['scayt_customerId']['default'];
+					}
+
+					return customerId
+					
+				})( editor.getParam('scayt_customerId'),  settings.scayt_srcUrl)
 
 				settings.scayt_customDictionaryIds = getParameter('scayt_customDictionaryIds');
 				settings.scayt_userDictionaryName = getParameter('scayt_userDictionaryName');
@@ -323,7 +359,7 @@
 				settings.scayt_servicePort = getParameter('scayt_servicePort');
 				settings.scayt_servicePath = getParameter('scayt_servicePath');
 
-				settings.scayt_contextCommands = utils.getParameter('scayt_contextCommands');
+				settings.scayt_contextCommands = getParameter('scayt_contextCommands');
 				if(settings.scayt_contextCommands === 'all') {
 					settings.scayt_contextCommands = optionDefinition['scayt_contextCommands']['default'];
 				} else if(settings.scayt_contextCommands === 'off') {
@@ -336,7 +372,7 @@
 				settings.scayt_contextMenuItemsOrder = settings.scayt_contextMenuItemsOrder.replace(/\s?[\|]+/g, ' ');
 
 				// prepare uiTabs parameter
-				settings.scayt_uiTabs = utils.getParameter('scayt_uiTabs').split(',');
+				settings.scayt_uiTabs = getParameter('scayt_uiTabs').split(',');
 				// lets validate our scayt_uiTabs option : now it should contain comma separated '0' or '1' symbols
 				if(settings.scayt_uiTabs.length != 3 || !utils.validateArray(settings.scayt_uiTabs, function(value) {
 					return value == 0 || value == 1;
@@ -658,7 +694,7 @@
 					self.items = [];
 
 					tinymce.each(self.contextmenu.split(/[ ,]/), function(name) {
-					var item = ed.menuItems[name];
+						var item = ed.menuItems[name];
 
 						if(name == '|') {
 							item = {text: name};
@@ -734,6 +770,19 @@
 		};
 
 		var utils = {
+			getLocationInfo: function(path) {
+
+				// path: 'file:///D:/Dev/WSC/SCAYTv3/apps/ckscayt/' or 'https://www.google.com.ua'
+				var a = document.createElement('a');
+				a.href = path;
+
+				return {
+					protocol: a.protocol.replace(/:/, ''),
+					host: a.host.split(':')[0],
+					port: a.port == "0" ? "80" : a.port, // Safari 5 always return '0' when port implicitly equals '80'
+					pathname: a.pathname.replace(/^\//, '')
+				};
+			},
 			isInteger: function(num) {
 				return (num ^ 0) === num;
 			},
@@ -1467,7 +1516,7 @@
 				var _SCAYT = tinymce.plugins.SCAYT,
 					scaytInstance = _SCAYT.getScayt(editor);
 
-				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" target="_blank" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ utils.getLang('about_throwt_copy', "&copy; 1999-2014 SpellChecker.net, All Rights Reserved.") +'</div>';
+				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" target="_blank" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ scaytInstance.getLocal('about_throw_copy') + '</div>';
 			}
 		};
 
