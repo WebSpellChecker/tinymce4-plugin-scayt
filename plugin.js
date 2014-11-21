@@ -110,7 +110,8 @@
 					customer_id			: _editor.getParam('scayt_customerId'),
 					data_attribute_name : dataAttributeName,
 					misspelled_word_class : misspelledWordClass,
-					ignoreElementsRegex : _editor.getParam('scayt_elementsToIgnore')
+					ignoreElementsRegex : _editor.getParam('scayt_elementsToIgnore'),
+					minWordLength 		: _editor.getParam('scayt_minWordLength')
 				};
 
 				if(_editor.getParam('scayt_serviceProtocol')) {
@@ -269,6 +270,10 @@
 					type: 'number',
 					'default': 5
 				},
+				scayt_minWordLength: {
+					type: 'number',
+					'default': 4
+				},
 				scayt_moreSuggestions: {
 					type: 'string',
 					'default': 'on',
@@ -325,6 +330,7 @@
 				settings.scayt_autoStartup = getParameter('scayt_autoStartup');
 				settings.scayt_moreSuggestions = isAllowable("scayt_moreSuggestions") ? getParameter("scayt_moreSuggestions") : "off";
 				settings.scayt_maxSuggestions = utils.isNegative(getParameter('scayt_maxSuggestions')) ? optionDefinition['scayt_maxSuggestions']['default'] : getParameter('scayt_maxSuggestions');
+				settings.scayt_minWordLength = getParameter('scayt_minWordLength') < 1 ? optionDefinition['scayt_minWordLength']['default'] : getParameter('scayt_minWordLength');
 				settings.scayt_srcUrl = getParameter('scayt_srcUrl');
 				settings.scayt_sLang = getParameter('scayt_sLang');
 
@@ -349,7 +355,7 @@
 					}
 
 					return customerId
-					
+
 				})( editor.getParam('scayt_customerId'),  settings.scayt_srcUrl)
 
 				settings.scayt_customDictionaryIds = getParameter('scayt_customDictionaryIds');

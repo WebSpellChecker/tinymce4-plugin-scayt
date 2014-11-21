@@ -27,6 +27,10 @@
  * Default value : [scayt_maxSuggestions=5].
  * Old option name : scayt_max_suggestion
  *
+ * @property {Number} scayt_minWordLength - The parameter defines minimum length of the words that will be collected from editor's text for spell checking.
+ * Possible value is any positive number.
+ * Default value : [scayt_minWordLength=4].
+ *
  * @property {String} scayt_customDictionaryIds - The parameter links SCAYT to custom dictionaries. This is a string containing dictionary IDs
  * separated by commas (',').
  * Further details at [http://wiki.webspellchecker.net/doku.php?id=installationandconfiguration:customdictionaries:licensed](http://wiki.webspellchecker.net/doku.php?id=installationandconfiguration:customdictionaries:licensed).
@@ -109,6 +113,9 @@
  *
  * // Do not show the suggestions directly.
  * config.scayt_maxSuggestions = 0;
+ * @example
+ * // Set minimum length of the words that will be collected from text.
+ * config.scayt_minWordLength = 5;
  * @example
  * config.scayt_customDictionaryIds = '3021,3456,3478"';
  * @example
