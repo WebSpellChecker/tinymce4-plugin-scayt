@@ -534,6 +534,20 @@
 					}
 					e.level.content = _SCAYT.removeMarkupFromString(editor, e.level.content);
 				});
+
+				editor.on('BeforeExecCommand', function(e) {
+					var scaytInstance = _SCAYT.getScayt(editor);
+
+					if(e.command === 'Cut') {
+						if(scaytInstance) {
+							scaytInstance.removeMarkupInSelectionNode();
+
+							setTimeout(function() {
+								scaytInstance.fire('startSpellCheck');
+							}, 0);
+						}
+					}
+				});
 			}
 		};
 
