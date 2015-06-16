@@ -538,7 +538,10 @@
 				editor.on('BeforeExecCommand', function(e) {
 					var scaytInstance = _SCAYT.getScayt(editor);
 
-					if(e.command === 'Cut') {
+					if(	e.command === 'Cut' || e.command === 'Bold' || e.command === 'Underline' ||
+						e.command === 'Italic' || e.command === 'Subscript' || e.command === 'Superscript' ||
+						e.command === 'mceToggleFormat' ) {
+
 						if(scaytInstance) {
 							scaytInstance.removeMarkupInSelectionNode();
 
