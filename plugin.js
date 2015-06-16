@@ -536,14 +536,18 @@
 				});
 
 				editor.on('BeforeExecCommand', function(e) {
-					var scaytInstance = _SCAYT.getScayt(editor);
+					var scaytInstance = _SCAYT.getScayt(editor),
+						removeMarkupInsideSelection = true;
 
 					if(	e.command === 'Cut' || e.command === 'Bold' || e.command === 'Underline' ||
 						e.command === 'Italic' || e.command === 'Subscript' || e.command === 'Superscript' ||
 						e.command === 'mceToggleFormat' ) {
 
 						if(scaytInstance) {
-							scaytInstance.removeMarkupInSelectionNode();
+							if(e.command === 'Cut') {
+								removeMarkupInsideSelection = false;
+							}
+							scaytInstance.removeMarkupInSelectionNode({removeInside: removeMarkupInsideSelection});
 
 							setTimeout(function() {
 								scaytInstance.fire('startSpellCheck');
