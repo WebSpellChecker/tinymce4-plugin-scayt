@@ -534,6 +534,34 @@
 					}
 					e.level.content = _SCAYT.removeMarkupFromString(editor, e.level.content);
 				});
+
+				editor.on('BeforeExecCommand', function(e) {
+					var scaytInstance = _SCAYT.getScayt(editor),
+						forceBookmark = false,
+						removeMarkupInsideSelection = true;
+
+					if(	e.command === 'Cut' || e.command === 'Bold' || e.command === 'Underline' ||
+						e.command === 'Italic' || e.command === 'Subscript' || e.command === 'Superscript' ||
+						e.command === 'mceToggleFormat' ) {
+
+						if(scaytInstance) {
+							if(e.command === 'Cut') {
+								removeMarkupInsideSelection = false;
+								// We need to force bookmark before we remove our markup.
+								// Otherwise we will get issues with cutting text via context menu.
+								forceBookmark = true;
+							}
+							scaytInstance.removeMarkupInSelectionNode({
+								removeInside: removeMarkupInsideSelection,
+								forceBookmark: forceBookmark
+							});
+
+							setTimeout(function() {
+								scaytInstance.fire('startSpellCheck');
+							}, 0);
+						}
+					}
+				});
 			}
 		};
 
