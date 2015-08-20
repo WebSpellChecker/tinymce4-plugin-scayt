@@ -494,6 +494,22 @@
 					}
 				});
 
+				ed.on('reloadMarkupScayt', function(data) {
+					var scaytInstance = _SCAYT.getScayt(ed),
+						removeOptions = data && data.removeOptions,
+						timeout = data && data.timeout;
+
+					if (scaytInstance) {
+						scaytInstance.removeMarkupInSelectionNode(removeOptions);
+						if(typeof timeout === 'number') {
+							setTimeout(function() {
+								scaytInstance.fire('startSpellCheck');
+							}, timeout);
+						} else {
+							scaytInstance.fire('startSpellCheck');
+						}
+					}
+				});
 
 				// There is no 'PastePostProcess' event in 4.0.5 tiny. So we need to complitely remove our markup from selection node
 				ed.on('PastePreProcess', function(data) {
@@ -504,8 +520,7 @@
 						data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
 
 						setTimeout(function() {
-							scaytInstance.removeMarkupInSelectionNode();
-							scaytInstance.fire('startSpellCheck');
+							editor.fire('reloadMarkupScayt');
 						}, 0);
 					}
 				});
@@ -551,15 +566,27 @@
 								// Otherwise we will get issues with cutting text via context menu.
 								forceBookmark = true;
 							}
-							scaytInstance.removeMarkupInSelectionNode({
-								removeInside: removeMarkupInsideSelection,
-								forceBookmark: forceBookmark
-							});
 
-							setTimeout(function() {
-								scaytInstance.fire('startSpellCheck');
-							}, 0);
+							editor.fire('reloadMarkupScayt', {
+								removeOptions: {
+									removeInside: removeMarkupInsideSelection,
+									forceBookmark: forceBookmark
+								},
+								timeout: 0
+							});
 						}
+					}
+				});
+
+				editor.on('keydown', function(evt) {
+					if (evt.keyCode == 13) {
+						editor.fire('reloadMarkupScayt', {
+							removeOptions: {
+								removeInside: true,
+								forceBookmark: false
+							},
+							timeout: 0
+						});
 					}
 				});
 			}
