@@ -158,6 +158,31 @@
 				});
 
 				instances[_editor.id] = scaytInstance;
+
+				if( _editor.formatter ) {
+     				var removeFormatRules = _editor.formatter.get( 'removeformat' ) || [];
+     				var position;
+     				var selector;
+
+     				for ( var i = 0; i < removeFormatRules.length; i += 1 ) {
+     					selector = removeFormatRules[i].selector;
+     					if ( selector.indexOf('span') !== -1 && selector.indexOf('span.') === -1  ) {
+							position = selector.indexOf('span') + 4;
+
+							removeFormatRules[i].selector = [selector.slice(0, position), ':not(.scayt-misspell-word)', selector.slice(position)].join('');
+						}
+
+						if ( selector.indexOf('*') !== -1 ) {
+							position = selector.indexOf('*') + 1;
+
+							removeFormatRules[i].selector = [selector.slice(0, position), ':not(.scayt-misspell-word)', selector.slice(position)].join('');
+						}
+     				}
+
+     				removeFormatRules.push( {selector: 'span.scayt-misspell-word', attributes: ['style'], remove: 'empty', split: true, expand: false, deep: true} );
+
+     				_editor.formatter.register('removeformat', removeFormatRules);
+      			}
 			});
 		};
 		var destroyScayt = function(editor) {
