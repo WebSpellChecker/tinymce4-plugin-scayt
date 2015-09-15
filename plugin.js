@@ -158,31 +158,6 @@
 				});
 
 				instances[_editor.id] = scaytInstance;
-
-				if( _editor.formatter ) {
-     				var removeFormatRules = _editor.formatter.get( 'removeformat' ) || [];
-     				var position;
-     				var selector;
-
-     				for ( var i = 0; i < removeFormatRules.length; i += 1 ) {
-     					selector = removeFormatRules[i].selector;
-     					if ( selector.indexOf('span') !== -1 && selector.indexOf('span.') === -1  ) {
-							position = selector.indexOf('span') + 4;
-
-							removeFormatRules[i].selector = [selector.slice(0, position), ':not(.scayt-misspell-word)', selector.slice(position)].join('');
-						}
-
-						if ( selector.indexOf('*') !== -1 ) {
-							position = selector.indexOf('*') + 1;
-
-							removeFormatRules[i].selector = [selector.slice(0, position), ':not(.scayt-misspell-word)', selector.slice(position)].join('');
-						}
-     				}
-
-     				removeFormatRules.push( {selector: 'span.scayt-misspell-word', attributes: ['style'], remove: 'empty', split: true, expand: false, deep: true} );
-
-     				_editor.formatter.register('removeformat', removeFormatRules);
-      			}
 			});
 		};
 		var destroyScayt = function(editor) {
@@ -519,22 +494,6 @@
 					}
 				});
 
-				ed.on('reloadMarkupScayt', function(data) {
-					var scaytInstance = _SCAYT.getScayt(ed),
-						removeOptions = data && data.removeOptions,
-						timeout = data && data.timeout;
-
-					if (scaytInstance) {
-						scaytInstance.removeMarkupInSelectionNode(removeOptions);
-						if(typeof timeout === 'number') {
-							setTimeout(function() {
-								scaytInstance.fire('startSpellCheck');
-							}, timeout);
-						} else {
-							scaytInstance.fire('startSpellCheck');
-						}
-					}
-				});
 
 				// There is no 'PastePostProcess' event in 4.0.5 tiny. So we need to complitely remove our markup from selection node
 				ed.on('PastePreProcess', function(data) {
@@ -545,7 +504,8 @@
 						data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
 
 						setTimeout(function() {
-							editor.fire('reloadMarkupScayt');
+							scaytInstance.removeMarkupInSelectionNode();
+							scaytInstance.fire('startSpellCheck');
 						}, 0);
 					}
 				});
@@ -591,27 +551,15 @@
 								// Otherwise we will get issues with cutting text via context menu.
 								forceBookmark = true;
 							}
-
-							editor.fire('reloadMarkupScayt', {
-								removeOptions: {
-									removeInside: removeMarkupInsideSelection,
-									forceBookmark: forceBookmark
-								},
-								timeout: 0
+							scaytInstance.removeMarkupInSelectionNode({
+								removeInside: removeMarkupInsideSelection,
+								forceBookmark: forceBookmark
 							});
-						}
-					}
-				});
 
-				editor.on('keydown', function(evt) {
-					if (evt.keyCode == 13) {
-						editor.fire('reloadMarkupScayt', {
-							removeOptions: {
-								removeInside: true,
-								forceBookmark: false
-							},
-							timeout: 0
-						});
+							setTimeout(function() {
+								scaytInstance.fire('startSpellCheck');
+							}, 0);
+						}
 					}
 				});
 			}
