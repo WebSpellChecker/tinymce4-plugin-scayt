@@ -26,7 +26,7 @@
 				loadOrder: []
 			},
 
-			// look at multiload app realization
+		// look at multiload app realization
 			scriptLoader = new tinymce.dom.ScriptLoader(),
 
 			dataAttributeName = 'data-scayt-word',
@@ -48,7 +48,6 @@
 				'scayt_auto_startup'			: 'scayt_autoStartup',
 				'scayt_context_menu_items_order': 'scayt_contextMenuItemsOrder'
 			};
-
 		var replaceOldOptionsNames = function(config) {
 			for(var key in config) {
 				if(key in backCompatibilityMap) {
@@ -135,12 +134,12 @@
 				}
 
 				var scaytInstance = new SCAYT.TINYMCE(_scaytInstanceOptions,
-					function() {
-						// success callback
-					},
-					function() {
-						// error callback
-					}),
+						function() {
+							// success callback
+						},
+						function() {
+							// error callback
+						}),
 					wordsPrefix = 'word_';
 
 				scaytInstance.subscribe('suggestionListSend', function(data) {
@@ -337,7 +336,6 @@
 				settings.scayt_minWordLength = getParameter('scayt_minWordLength') < 1 ? optionDefinition['scayt_minWordLength']['default'] : getParameter('scayt_minWordLength');
 				settings.scayt_srcUrl = getParameter('scayt_srcUrl');
 				settings.scayt_sLang = getParameter('scayt_sLang');
-
 				settings.scayt_customerId = (function( customerId, url ) {
 
 					url = utils.getLocationInfo( url );
@@ -385,8 +383,8 @@
 				settings.scayt_uiTabs = getParameter('scayt_uiTabs').split(',');
 				// lets validate our scayt_uiTabs option : now it should contain comma separated '0' or '1' symbols
 				if(settings.scayt_uiTabs.length != 3 || !utils.validateArray(settings.scayt_uiTabs, function(value) {
-					return value == 0 || value == 1;
-				})) {
+						return value == 0 || value == 1;
+					})) {
 					settings.scayt_uiTabs = optionDefinition.scayt_uiTabs['default'].split(',');
 				}
 
@@ -651,9 +649,9 @@
 			pos: null,
 			createScaytMenuItem: function() {
 				/* 	this method creates contextmenu item in original menu
-					and will be always invisible
-					Created to save link of original tinymce contextmenu.
-				*/
+				 and will be always invisible
+				 Created to save link of original tinymce contextmenu.
+				 */
 				editor.addMenuItem('scayt', {
 					context: 'scayt3t',
 					text: 'SCAYT',
@@ -769,9 +767,9 @@
 					var menuEl = self.menu.getEl();
 
 					if(!tinymce.isIE) {
-						 menuEl.style.maxHeight = 'inherit';
-						 menuEl.style.position = 'absolute';
-						 menuEl.style.overflow = 'visible';
+						menuEl.style.maxHeight = 'inherit';
+						menuEl.style.position = 'absolute';
+						menuEl.style.overflow = 'visible';
 					} else {
 						menuEl.style.height = 'auto';
 
@@ -839,7 +837,7 @@
 			},
 			getParameter: function(optionName) {
 				var optionDefinition = options.definitionDefaultOption;
-					optionName = optionName + '';
+				optionName = optionName + '';
 
 				if(!optionDefinition[optionName]) {
 					return editor.getParam(optionName);
@@ -1029,7 +1027,7 @@
 					}
 				};
 				getToCode = function(aLangName) {
-					 var langName = typeof aLangName === 'string' ? aLangName : '"' + aLangName + '"';
+					var langName = typeof aLangName === 'string' ? aLangName : '"' + aLangName + '"';
 
 					for(var code in codeList) {
 						if(codeList[code] == langName) {
@@ -1152,16 +1150,46 @@
 
 				languageList = utils.registerLanguages.makeLanguageList(languageList);
 
+				var reverseKeys =[]
+				var newLanguageList = {};
+
+				for (var key in languageList) {
+					if(languageList.hasOwnProperty(key) && (typeof languageList[key] === 'string' && languageList[key] != '')){
+						newLanguageList[languageList[key]] = key;
+					}
+				}
+
+				reverseKeys = Object.keys(newLanguageList).sort();
+				languageList = {};
+
+				for(var i = 0; i < reverseKeys.length;i+=1){
+					languageList[reverseKeys[i]] =  newLanguageList[reverseKeys[i]]
+				}
 				for(var langName in languageList) {
 					createCheckbox.push({
-						checked: langName === currentLang ? true : false,
-						name: langName,
-						role: langName,
-						text: languageList[langName]
+						checked: languageList[langName] === currentLang ? true : false,
+						name: languageList[langName],
+						role: languageList[langName],
+						text: langName
 					});
 				}
 
 				return createCheckbox;
+			},
+			dividedLanguagesCheckbox:function(checkBoxes){
+				var dividedArr = [[],[]],
+					keys =  Object.keys(checkBoxes),
+					length = keys.length,
+					arrNum = 0,
+					keyNum = 0;
+				for(var key in checkBoxes){
+					if(checkBoxes.hasOwnProperty(key)){
+						keyNum = parseInt(key)
+						arrNum = (keyNum < Math.ceil(length / 2))?0:1;
+						dividedArr[arrNum].push(checkBoxes[key])
+					}
+				}
+				return dividedArr;
 			},
 			generateDictionaryButtons: function() {
 				var buttons = [
@@ -1270,7 +1298,7 @@
 							definitionDialog.setDictionaryButtons();
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-					   }
+						}
 
 					}, function(error) {
 						err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
@@ -1293,12 +1321,12 @@
 							definitionDialog.dicSuccessMessage(suc_massage);
 						} else {
 							definitionDialog.setDictionaryButtons();
-								err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
-								definitionDialog.dicErrorMessage( err_massage );
-					   }
-					}, function(error) {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
+						}
+					}, function(error) {
+						err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
+						definitionDialog.dicErrorMessage( err_massage );
 					});
 				},
 				rename: function() {
@@ -1319,12 +1347,12 @@
 						} else {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-					   }
+						}
 
 					}, function(error) {
-							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
-							definitionDialog.setDictionaryName(definitionDialog.getDictionaryName());
-							definitionDialog.dicErrorMessage( err_massage );
+						err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
+						definitionDialog.setDictionaryName(definitionDialog.getDictionaryName());
+						definitionDialog.dicErrorMessage( err_massage );
 					});
 				},
 				remove: function() {
@@ -1346,11 +1374,11 @@
 						} else {
 							err_massage = err_massage.replace("%s" , ('"'+ response.name +'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-					   }
+						}
 
 					}, function(error) {
-							err_massage = err_massage.replace("%s" , ('"'+ definitionDialog.getDictionaryName() +'"') );
-							definitionDialog.dicErrorMessage( err_massage );
+						err_massage = err_massage.replace("%s" , ('"'+ definitionDialog.getDictionaryName() +'"') );
+						definitionDialog.dicErrorMessage( err_massage );
 					});
 				}
 			},
@@ -1376,7 +1404,9 @@
 					ed = editor,
 					_SCAYT = tinymce.plugins.SCAYT,
 					settings = ed.settings,
-					showUITab = settings.scayt_uiTabs;
+					showUITab = settings.scayt_uiTabs,
+					LanguagesCheckbox = definitionDialog.generateLanguagesCheckbox(_SCAYT.getLanguages(ed), _SCAYT.getCurrentLanguage(ed)),
+					arrayDividedLanguagesCheckbox = definitionDialog.dividedLanguagesCheckbox(LanguagesCheckbox);
 
 				tabs = [
 					{
@@ -1404,33 +1434,75 @@
 								type: 'container',
 								role: 'container',
 								layout: 'grid',
+								id: 'langHolder',
+								name: 'langHolder',
 								packV: 'start',
 								columns: 2,
 								spacing: 10,
 								alignH: ['50%', '50%'],
-								defaults: {
-									type: 'checkbox',
-									role: 'checkbox',
-									label: ' ',
-									style: 'overflow: hidden; cursor: pointer;'
-								},
-								items: definitionDialog.generateLanguagesCheckbox(_SCAYT.getLanguages(ed), _SCAYT.getCurrentLanguage(ed)),
+								items: [
+									{
+										type: 'container',
+										id: 'leftCol',
+										name: 'leftCol',
+										layout: 'grid',
+										role: 'container',
+										columns: 1,
+										spacing: 10,
+										defaults: {
+											type: 'radio',
+											role: 'radio',
+											label: ' ',
+											style: 'overflow: hidden; cursor: pointer;'
+										},
+										items : arrayDividedLanguagesCheckbox[0]
+									},
+									{
+										type: 'container',
+										id: 'rightCol',
+										name: 'rightCol',
+										layout: 'grid',
+										role: 'container',
+										columns: 1,
+										spacing: 10,
+										defaults: {
+											type: 'radio',
+											role: 'radio',
+											label: ' ',
+											style: 'overflow: hidden; cursor: pointer;'
+										},
+										items : arrayDividedLanguagesCheckbox[1]
+									}
+								],
+
+
 								onClick: function(data) {
 									var control = data.control,
-										items;
+										langHolder,
+										itemsLeft, itemsRight, items,
+										leftCol, rightCol;
 
 									if(data && control.aria('role') != "container") {
-										if(control.checked()) {
-											items = control.parent().toJSON();
 
-											for(var item in items) {
-												items[item] = false;
-											}
+										langHolder = control.parents('#langHolder')[0];
+										leftCol = langHolder.find('#leftCol')[0];
+										rightCol = langHolder.find('#rightCol')[0];
 
-											items[control.aria('role')] = true;
-											definitionDialog.langState.selectLang = control.aria('role');
-											control.parent().fromJSON(items);
+										itemsLeft = leftCol.toJSON();
+										itemsRight = rightCol.toJSON();
+
+										items = tinymce.extend(itemsLeft, itemsRight);
+
+										for(var item in items) {
+											items[item] = false;
 										}
+
+										items[control.aria('role')] = true;
+										definitionDialog.langState.selectLang = control.aria('role');
+
+										leftCol.fromJSON(items);
+										rightCol.fromJSON(items);
+
 									}
 
 								}
@@ -1474,8 +1546,8 @@
 								role: 'fieldset',
 								style: 'border: none;padding-top: 20px;',
 								html: '<div id="infoBlock" style="white-space: normal;text-align: justify;"><div id="messageBox"></div>'+
-											utils.getLang('dic_about_info','Initially a User Dictionary is stored in a cookie. However, cookies are limited in size. When a User Dictionary grows to a point where it cannot be stored in a cookie, the dictionary may be stored on our server. To store your personal dictionary on our server, you should specify a name for it. If you already have a stored dictionary, please type its name and click the Restore button.')
-									+ '</div>'
+								utils.getLang('dic_about_info','Initially a User Dictionary is stored in a cookie. However, cookies are limited in size. When a User Dictionary grows to a point where it cannot be stored in a cookie, the dictionary may be stored on our server. To store your personal dictionary on our server, you should specify a name for it. If you already have a stored dictionary, please type its name and click the Restore button.')
+								+ '</div>'
 							}
 
 						]
@@ -1535,7 +1607,7 @@
 
 						// Opening tab depends on the selected menu item
 						//if(openTabWithId !== 0) {
-							self.items()[0].activateTab(openTabWithId);
+						self.items()[0].activateTab(openTabWithId);
 						//};
 
 						self.focus();
