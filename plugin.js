@@ -850,7 +850,8 @@
 			},
 			getParameter: function(optionName) {
 				var optionDefinition = options.definitionDefaultOption;
-					optionName = optionName + '';
+
+				optionName = optionName + '';
 
 				if(!optionDefinition[optionName]) {
 					return editor.getParam(optionName);
