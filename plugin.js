@@ -158,31 +158,6 @@
 				});
 
 				instances[_editor.id] = scaytInstance;
-
-				if( _editor.formatter ) {
-     				var removeFormatRules = _editor.formatter.get( 'removeformat' ) || [];
-     				var position;
-     				var selector;
-
-     				for ( var i = 0; i < removeFormatRules.length; i += 1 ) {
-     					selector = removeFormatRules[i].selector;
-     					if ( selector.indexOf('span') !== -1 && selector.indexOf('span.') === -1  ) {
-							position = selector.indexOf('span') + 4;
-
-							removeFormatRules[i].selector = [selector.slice(0, position), ':not(.scayt-misspell-word)', selector.slice(position)].join('');
-						}
-
-						if ( selector.indexOf('*') !== -1 ) {
-							position = selector.indexOf('*') + 1;
-
-							removeFormatRules[i].selector = [selector.slice(0, position), ':not(.scayt-misspell-word)', selector.slice(position)].join('');
-						}
-     				}
-
-     				removeFormatRules.push( {selector: 'span.scayt-misspell-word', attributes: ['style'], remove: 'empty', split: true, expand: false, deep: true} );
-
-     				_editor.formatter.register('removeformat', removeFormatRules);
-      			}
 			});
 		};
 		var destroyScayt = function(editor) {
@@ -519,22 +494,6 @@
 					}
 				});
 
-				ed.on('reloadMarkupScayt', function(data) {
-					var scaytInstance = _SCAYT.getScayt(ed),
-						removeOptions = data && data.removeOptions,
-						timeout = data && data.timeout;
-
-					if (scaytInstance) {
-						scaytInstance.removeMarkupInSelectionNode(removeOptions);
-						if(typeof timeout === 'number') {
-							setTimeout(function() {
-								scaytInstance.fire('startSpellCheck');
-							}, timeout);
-						} else {
-							scaytInstance.fire('startSpellCheck');
-						}
-					}
-				});
 
 				// There is no 'PastePostProcess' event in 4.0.5 tiny. So we need to complitely remove our markup from selection node
 				ed.on('PastePreProcess', function(data) {
@@ -545,7 +504,8 @@
 						data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
 
 						setTimeout(function() {
-							editor.fire('reloadMarkupScayt');
+							scaytInstance.removeMarkupInSelectionNode();
+							scaytInstance.fire('startSpellCheck');
 						}, 0);
 					}
 				});
@@ -591,27 +551,15 @@
 								// Otherwise we will get issues with cutting text via context menu.
 								forceBookmark = true;
 							}
-
-							editor.fire('reloadMarkupScayt', {
-								removeOptions: {
-									removeInside: removeMarkupInsideSelection,
-									forceBookmark: forceBookmark
-								},
-								timeout: 0
+							scaytInstance.removeMarkupInSelectionNode({
+								removeInside: removeMarkupInsideSelection,
+								forceBookmark: forceBookmark
 							});
-						}
-					}
-				});
 
-				editor.on('keydown', function(evt) {
-					if (evt.keyCode == 13) {
-						editor.fire('reloadMarkupScayt', {
-							removeOptions: {
-								removeInside: true,
-								forceBookmark: false
-							},
-							timeout: 0
-						});
+							setTimeout(function() {
+								scaytInstance.fire('startSpellCheck');
+							}, 0);
+						}
 					}
 				});
 			}
@@ -703,9 +651,9 @@
 			pos: null,
 			createScaytMenuItem: function() {
 				/* 	this method creates contextmenu item in original menu
-					and will be always invisible
-					Created to save link of original tinymce contextmenu.
-				*/
+					 and will be always invisible
+					 Created to save link of original tinymce contextmenu.
+			 	*/
 				editor.addMenuItem('scayt', {
 					context: 'scayt3t',
 					text: 'SCAYT',
@@ -821,9 +769,9 @@
 					var menuEl = self.menu.getEl();
 
 					if(!tinymce.isIE) {
-						 menuEl.style.maxHeight = 'inherit';
-						 menuEl.style.position = 'absolute';
-						 menuEl.style.overflow = 'visible';
+						menuEl.style.maxHeight = 'inherit';
+						menuEl.style.position = 'absolute';
+						menuEl.style.overflow = 'visible';
 					} else {
 						menuEl.style.height = 'auto';
 
@@ -860,6 +808,17 @@
 		};
 
 		var utils = {
+			getKeys: Object.keys || function( obj ) {
+				var buffer = [], key;
+
+					for( key in obj ) {
+						if( obj.hasOwnProperty( key ) ) {
+							buffer.push( key );
+						}
+					}
+
+				return buffer;
+			},
 			getLocationInfo: function(path) {
 
 				// path: 'file:///D:/Dev/WSC/SCAYTv3/apps/ckscayt/' or 'https://www.google.com.ua'
@@ -891,7 +850,8 @@
 			},
 			getParameter: function(optionName) {
 				var optionDefinition = options.definitionDefaultOption;
-					optionName = optionName + '';
+
+				optionName = optionName + '';
 
 				if(!optionDefinition[optionName]) {
 					return editor.getParam(optionName);
@@ -1081,7 +1041,7 @@
 					}
 				};
 				getToCode = function(aLangName) {
-					 var langName = typeof aLangName === 'string' ? aLangName : '"' + aLangName + '"';
+					var langName = typeof aLangName === 'string' ? aLangName : '"' + aLangName + '"';
 
 					for(var code in codeList) {
 						if(codeList[code] == langName) {
@@ -1198,22 +1158,53 @@
 				var createCheckbox = [],
 					renderLang,
 					languageList = aLanguages || {},
-					currentLang = aCurrentLanguage || 'en_US';
+					currentLang = aCurrentLanguage || 'en_US',
+					reverseKeys =[],
+					newLanguageList = {},
+					getKeys = utils.getKeys;
 
 				this.langState.currentLang = currentLang;
-
 				languageList = utils.registerLanguages.makeLanguageList(languageList);
 
+				for (var key in languageList) {
+					if (languageList.hasOwnProperty(key) && (typeof languageList[key] === 'string' && languageList[key] != '')){
+						newLanguageList[languageList[key]] = key;
+					}
+				}
+				reverseKeys =  getKeys(newLanguageList).sort();
+				languageList = {};
+
+				for(var i = 0; i < reverseKeys.length; i += 1){
+					languageList[reverseKeys[i]] =  newLanguageList[reverseKeys[i]];
+				}
 				for(var langName in languageList) {
 					createCheckbox.push({
-						checked: langName === currentLang ? true : false,
-						name: langName,
-						role: langName,
-						text: languageList[langName]
+						checked: languageList[langName] === currentLang ? true : false,
+						name: languageList[langName],
+						role: languageList[langName],
+						text: langName
 					});
 				}
 
 				return createCheckbox;
+			},
+			dividedLanguagesCheckbox:function(checkBoxes){
+				var dividedArr = [[],[]],
+					getKeys = utils.getKeys,
+					keys =  getKeys(checkBoxes),
+					length = keys.length,
+					arrNum = 0,
+					keyNum = 0;
+
+				for(var key in checkBoxes){
+					if(checkBoxes.hasOwnProperty(key)){
+						keyNum = parseInt(key);
+						arrNum = (keyNum < Math.ceil(length / 2))? 0 : 1 ;
+						dividedArr[arrNum].push(checkBoxes[key]);
+					}
+				}
+
+				return dividedArr;
 			},
 			generateDictionaryButtons: function() {
 				var buttons = [
@@ -1322,7 +1313,7 @@
 							definitionDialog.setDictionaryButtons();
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-					   }
+						}
 
 					}, function(error) {
 						err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
@@ -1345,12 +1336,12 @@
 							definitionDialog.dicSuccessMessage(suc_massage);
 						} else {
 							definitionDialog.setDictionaryButtons();
-								err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
-								definitionDialog.dicErrorMessage( err_massage );
-					   }
-					}, function(error) {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
+						}
+					}, function(error) {
+						err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
+						definitionDialog.dicErrorMessage( err_massage );
 					});
 				},
 				rename: function() {
@@ -1371,12 +1362,12 @@
 						} else {
 							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-					   }
+						}
 
 					}, function(error) {
-							err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
-							definitionDialog.setDictionaryName(definitionDialog.getDictionaryName());
-							definitionDialog.dicErrorMessage( err_massage );
+						err_massage = err_massage.replace("%s" , ('"'+definitionDialog.getDictionaryName()+'"') );
+						definitionDialog.setDictionaryName(definitionDialog.getDictionaryName());
+						definitionDialog.dicErrorMessage( err_massage );
 					});
 				},
 				remove: function() {
@@ -1398,11 +1389,11 @@
 						} else {
 							err_massage = err_massage.replace("%s" , ('"'+ response.name +'"') );
 							definitionDialog.dicErrorMessage( err_massage );
-					   }
+						}
 
 					}, function(error) {
-							err_massage = err_massage.replace("%s" , ('"'+ definitionDialog.getDictionaryName() +'"') );
-							definitionDialog.dicErrorMessage( err_massage );
+						err_massage = err_massage.replace("%s" , ('"'+ definitionDialog.getDictionaryName() +'"') );
+						definitionDialog.dicErrorMessage( err_massage );
 					});
 				}
 			},
@@ -1428,7 +1419,9 @@
 					ed = editor,
 					_SCAYT = tinymce.plugins.SCAYT,
 					settings = ed.settings,
-					showUITab = settings.scayt_uiTabs;
+					showUITab = settings.scayt_uiTabs,
+					LanguagesCheckbox = definitionDialog.generateLanguagesCheckbox(_SCAYT.getLanguages(ed), _SCAYT.getCurrentLanguage(ed)),
+					arrayDividedLanguagesCheckbox = definitionDialog.dividedLanguagesCheckbox(LanguagesCheckbox);
 
 				tabs = [
 					{
@@ -1456,33 +1449,75 @@
 								type: 'container',
 								role: 'container',
 								layout: 'grid',
+								id: 'langHolder',
+								name: 'langHolder',
 								packV: 'start',
 								columns: 2,
 								spacing: 10,
 								alignH: ['50%', '50%'],
-								defaults: {
-									type: 'checkbox',
-									role: 'checkbox',
-									label: ' ',
-									style: 'overflow: hidden; cursor: pointer;'
-								},
-								items: definitionDialog.generateLanguagesCheckbox(_SCAYT.getLanguages(ed), _SCAYT.getCurrentLanguage(ed)),
+								items: [
+									{
+										type: 'container',
+										id: 'leftCol',
+										name: 'leftCol',
+										layout: 'grid',
+										role: 'container',
+										columns: 1,
+										spacing: 10,
+										defaults: {
+											type: 'radio',
+											role: 'radio',
+											label: ' ',
+											style: 'overflow: hidden; cursor: pointer;'
+										},
+										items : arrayDividedLanguagesCheckbox[0]
+									},
+									{
+										type: 'container',
+										id: 'rightCol',
+										name: 'rightCol',
+										layout: 'grid',
+										role: 'container',
+										columns: 1,
+										spacing: 10,
+										defaults: {
+											type: 'radio',
+											role: 'radio',
+											label: ' ',
+											style: 'overflow: hidden; cursor: pointer;'
+										},
+										items : arrayDividedLanguagesCheckbox[1]
+									}
+								],
+
+
 								onClick: function(data) {
 									var control = data.control,
-										items;
+										langHolder,
+										itemsLeft, itemsRight, items,
+										leftCol, rightCol;
 
 									if(data && control.aria('role') != "container") {
-										if(control.checked()) {
-											items = control.parent().toJSON();
 
-											for(var item in items) {
-												items[item] = false;
-											}
+										langHolder = control.parents('#langHolder')[0];
+										leftCol = langHolder.find('#leftCol')[0];
+										rightCol = langHolder.find('#rightCol')[0];
 
-											items[control.aria('role')] = true;
-											definitionDialog.langState.selectLang = control.aria('role');
-											control.parent().fromJSON(items);
+										itemsLeft = leftCol.toJSON();
+										itemsRight = rightCol.toJSON();
+
+										items = tinymce.extend(itemsLeft, itemsRight);
+
+										for(var item in items) {
+											items[item] = false;
 										}
+
+										items[control.aria('role')] = true;
+										definitionDialog.langState.selectLang = control.aria('role');
+
+										leftCol.fromJSON(items);
+										rightCol.fromJSON(items);
+
 									}
 
 								}
