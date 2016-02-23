@@ -478,7 +478,7 @@
 							data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
 						}
 
-						scaytInstance.fire('startSpellCheck');
+						scaytInstance.reloadMarkup();
 					}
 				});
 
@@ -505,7 +505,7 @@
 
 						setTimeout(function() {
 							scaytInstance.removeMarkupInSelectionNode();
-							scaytInstance.fire('startSpellCheck');
+							scaytInstance.reloadMarkup();
 						}, 0);
 					}
 				});
@@ -557,7 +557,7 @@
 							});
 
 							setTimeout(function() {
-								scaytInstance.fire('startSpellCheck');
+								scaytInstance.reloadMarkup();
 							}, 0);
 						}
 					}
