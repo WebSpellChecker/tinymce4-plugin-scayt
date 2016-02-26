@@ -169,8 +169,20 @@
 
 			delete instances[editor.id];
 		};
-
+		// backward compatibility if version of scayt app < 4.8.3
+		var reloadMarkup = function(scaytInstance) {
+			if (scaytInstance.reloadMarkup) {
+				scaytInstance.reloadMarkup();
+			} else {
+				console.warn('Note: you are using new version of SCAYT plug-in. It is recommended to upgrade WebSpellChecker.net to version 4.8.3 Contact us: '+
+					'https://www.webspellchecker.net/contact-us.html');
+				scaytInstance.fire('startSpellCheck');
+			}
+		};
 		return {
+			reloadMarkup: function(scaytInstance){
+				return reloadMarkup(scaytInstance);
+			},
 			create: function(editor) {
 				return createScayt(editor);
 			},
@@ -478,7 +490,7 @@
 							data['content'] = _SCAYT.removeMarkupFromString(ed, data['content']);
 						}
 
-						scaytInstance.reloadMarkup();
+						_SCAYT.reloadMarkup(scaytInstance);
 					}
 				});
 
@@ -505,7 +517,7 @@
 
 						setTimeout(function() {
 							scaytInstance.removeMarkupInSelectionNode();
-							scaytInstance.reloadMarkup();
+							_SCAYT.reloadMarkup(scaytInstance);
 						}, 0);
 					}
 				});
@@ -557,7 +569,7 @@
 							});
 
 							setTimeout(function() {
-								scaytInstance.reloadMarkup();
+								_SCAYT.reloadMarkup(scaytInstance);
 							}, 0);
 						}
 					}
