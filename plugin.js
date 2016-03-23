@@ -1088,7 +1088,15 @@
 					getToCode: getToCode,
 					makeLanguageList: makeLanguageList
 				};
-			})()
+			})(),
+			replaceHostNullToNativeNull: function(data) {
+				/* Fixed bug in IE8.Instanceof host "null" throw Object expected*/
+				if(document.all && document.querySelector && !document.addEventListener){
+					for (var k in data){
+						data[k] = (data[k] === null)? null : data[k];
+					}
+				}
+			}
 		};
 
 		var definitionDialog = {
@@ -1132,6 +1140,7 @@
 					identification: 'options',
 					menuItemIndex: 0,
 					onclick: function(data) {
+						utils.replaceHostNullToNativeNull(data);
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				},
@@ -1140,6 +1149,7 @@
 					identification: 'languages',
 					menuItemIndex: 1,
 					onclick: function(data) {
+						utils.replaceHostNullToNativeNull(data);
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				},
@@ -1148,6 +1158,7 @@
 					identification: 'dictionary',
 					menuItemIndex: 2,
 					onclick: function(data) {
+						utils.replaceHostNullToNativeNull(data);
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				},
@@ -1156,6 +1167,7 @@
 					identification: 'about',
 					menuItemIndex: 3,
 					onclick: function(data) {
+						utils.replaceHostNullToNativeNull(data);
 						definitionDialog.openDialog(editor, data, this.settings.menuItemIndex);
 					}
 				}
