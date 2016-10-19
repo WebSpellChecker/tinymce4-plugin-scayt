@@ -1675,7 +1675,7 @@
 				var _SCAYT = tinymce.plugins.SCAYT,
 					scaytInstance = _SCAYT.getScayt(editor);
 
-				return '<div id="scayt_about" style="padding: 15px;"><a href="http://webspellchecker.net" target="_blank" alt="WebSpellChecker.net"><img title="WebSpellChecker.net" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /></a><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ scaytInstance.getLocal('about_throw_copy') + '</div>';
+				return '<div id="scayt_about" style="padding: 15px;"><img title="logo" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ scaytInstance.getLocal('about_throw_copy') + '</div>';
 			}
 		};
 
