@@ -310,7 +310,7 @@
 				},
 				scayt_contextCommands: {
 					type: 'string',
-					'default': 'ignore,ignoreall,add'
+					'default': 'ignoreall,add'
 				},
 				scayt_contextMenuItemsOrder: {
 					type: 'string',
