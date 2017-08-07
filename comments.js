@@ -2,7 +2,7 @@
  * @member TinyMCE4_SCAYT3_plug-in
  * @public
  * 
- * @property {String} [scayt_contextCommands='ignore,ignoreall,add'] - The parameter customizes the display of SCAYT context menu commands ("Add Word", "Ignore"
+ * @property {String} [scayt_contextCommands='ignoreall,add'] - The parameter customizes the display of SCAYT context menu commands ("Add Word", "Ignore"
  * and "Ignore All"). This must be a string with one of this words: 'off', 'all'; or combination of the following words: 'ignore,ignoreall,add' separated by a comma character (','):
  * 'off' &ndash; disables all options; 'all' &ndash; enables all options; 'ignore' &ndash; enables the "Ignore" option;
  * 'ignoreall' &ndash; enables the "Ignore All" option; 'add' &ndash; enables the "Add Word" option.
@@ -86,8 +86,8 @@
  * Please note that 'style' tag would be added to specified tags list.
  *
  * @example
- * // Show only "Add Word" and "Ignore All" in the context menu.
- * config.scayt_contextCommands = 'add,ignoreall';
+ * // Show "Add Word", "Ignore" and "Ignore All" in the context menu.
+ * config.scayt_contextCommands = 'add,ignore,ignoreall';
  * @example
  * // Sets SCAYT to German.
  * config.scayt_sLang = 'de_DE';
