@@ -1,7 +1,7 @@
 /**
  * @member TinyMCE4_SCAYT3_plug-in
  * @public
- * 
+ *
  * @property {String} [scayt_contextCommands='ignoreall,add'] - The parameter customizes the display of SCAYT context menu commands ("Add Word", "Ignore"
  * and "Ignore All"). This must be a string with one of this words: 'off', 'all'; or combination of the following words: 'ignore,ignoreall,add' separated by a comma character (','):
  * 'off' &ndash; disables all options; 'all' &ndash; enables all options; 'ignore' &ndash; enables the "Ignore" option;
@@ -15,7 +15,7 @@
  * 'nb_NO', 'pt_PT', 'es_ES', 'sv_SE'.
  * Old option name : scayt_slang
  *
- * @property {Number} [scayt_maxSuggestions=5] - The parameter defines the number of SCAYT suggestions to show in the main context menu.
+ * @property {Number} [scayt_maxSuggestions=3] - The parameter defines the number of SCAYT suggestions to show in the main context menu.
  * Possible values are:
  * '0' (zero) &ndash; No suggestions are shown in the main context menu. All
  * entries will be listed in the the "More Suggestions" sub-menu.
@@ -25,7 +25,7 @@
  * entries will be listed in the the "More Suggestions" sub-menu.
  * Old option name : scayt_max_suggestion
  *
- * @property {Number} [scayt_minWordLength=4] - The parameter defines minimum length of the words that will be collected from editor's text for spell checking.
+ * @property {Number} [scayt_minWordLength=3] - The parameter defines minimum length of the words that will be collected from editor's text for spell checking.
  * Possible value is any positive number.
  *
  * @property {String} [scayt_customDictionaryIds=''] - The parameter links SCAYT to custom dictionaries. This is a string containing dictionary IDs

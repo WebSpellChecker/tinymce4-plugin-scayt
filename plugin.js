@@ -294,7 +294,7 @@
 				},
 				scayt_maxSuggestions: {
 					type: 'number',
-					'default': 5
+					'default': 3
 				},
 				scayt_minWordLength: {
 					type: 'number',
