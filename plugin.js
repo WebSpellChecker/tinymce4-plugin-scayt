@@ -1674,8 +1674,8 @@
 			aboutTemplate: function() {
 				var _SCAYT = tinymce.plugins.SCAYT,
 					scaytInstance = _SCAYT.getScayt(editor);
-
-				return '<div id="scayt_about" style="padding: 15px;"><img title="logo" alt="logo" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ scaytInstance.getLocal('about_throw_copy') + '</div>';
+				debugger
+				return '<div id="scayt_about" style="padding: 15px;"><img title="logo" alt="logo" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ scaytInstance.getLocal('text_copyrights') + '</div>';
 			}
 		};
 
