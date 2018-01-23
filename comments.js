@@ -30,7 +30,7 @@
  *
  * @property {String} [scayt_customDictionaryIds=''] - The parameter links SCAYT to custom dictionaries. This is a string containing dictionary IDs
  * separated by commas (',').
- * Further details at [http://wiki.webspellchecker.net/doku.php?id=installationandconfiguration:customdictionaries:licensed](http://wiki.webspellchecker.net/doku.php?id=installationandconfiguration:customdictionaries:licensed).
+ * Further details at [link](@@BRANDING_CUSTOM_DICT_MANUAL_URL)).
  * Old option name : scayt_custom_dic_ids
  *
  * @property {String} [scayt_userDictionaryName=''] - The parameter activates a User Dictionary in SCAYT. The user
@@ -68,7 +68,7 @@
  * Old option name : scayt_customer_id
  *
  * @property {String} [scayt_srcUrl = '//svc.webspellchecker.net/spellcheck31/lf/scayt3/tinymce/tinymcescayt.js'] - The parameter sets the URL to SCAYT core. Required to switch to the licensed version of SCAYT application.
- * Further details available at [http://wiki.webspellchecker.net/doku.php?id=migration:hosredfreetolicensedck](http://wiki.webspellchecker.net/doku.php?id=migration:hosredfreetolicensedck)
+ * Further details available at [link](@@BRANDING_MIGRATION_MANUAL_URL)
  * Old option name : scayt_custom_url
  *
  * @property {Boolean} [scayt_auto_startup=false] - The parameter turns on/off SCAYT on the autostartup. If 'true', turns on SCAYT automatically after loading the editor.
