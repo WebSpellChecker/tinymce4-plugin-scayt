@@ -1630,10 +1630,11 @@
 			},
 			openDialog: function(aEditor, aData, aIdOpenTab) {
 				var self = this,
-					openTabWithId = aIdOpenTab || 0;
+					openTabWithId = aIdOpenTab || 0,
+					scaytInstance = tinymce.plugins.SCAYT.getScayt(aEditor);
 
 				return aEditor.windowManager.open({
-					title: utils.getLang('title','SpellCheckAsYouType'),
+					title: scaytInstance.getLocal('text_title'),
 					data: aData,
 					minWidth: 450,
 					minHeight: 300,
@@ -1674,7 +1675,7 @@
 			aboutTemplate: function() {
 				var _SCAYT = tinymce.plugins.SCAYT,
 					scaytInstance = _SCAYT.getScayt(editor);
-				debugger
+
 				return '<div id="scayt_about" style="padding: 15px;"><img title="logo" alt="logo" src="' + scaytInstance.getLogo(editor) + '" style="padding-bottom: 15px;" /><br />' + scaytInstance.getLocal('version') + _SCAYT.getVersion(editor) + ' <br /><br /> '+ scaytInstance.getLocal('text_copyrights') + '</div>';
 			}
 		};
