@@ -278,7 +278,7 @@
 			definitionDefaultOption: {
 				scayt_srcUrl: {
 					type: 'string',
-					'default': '//svc.webspellchecker.net/spellcheck31/lf/scayt3/tinymce/tinymcescayt.js'
+					'default': '//svc.webspellchecker.net/spellcheck31/wscbundle/wscbundle.js'
 				},
 				scayt_sLang: {
 					type: 'string',
@@ -1634,7 +1634,7 @@
 					scaytInstance = tinymce.plugins.SCAYT.getScayt(aEditor);
 
 				return aEditor.windowManager.open({
-					title: scaytInstance.getLocal('text_title'),
+					title: 'SCAYT',
 					data: aData,
 					minWidth: 450,
 					minHeight: 300,
