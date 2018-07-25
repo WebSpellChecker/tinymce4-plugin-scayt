@@ -63,19 +63,16 @@
 			var protocol = document.location.protocol;
 			var baseUrl = editor.getParam('scayt_srcUrl');
 			var date = new Date();
-			var	timestamp = date.getTime();
-			var	baseUrlWithTimestamp;
 			// Default to 'http' for unknown.
 			protocol = protocol.search(/https?:/) !== -1 ? protocol : 'http:';
 			baseUrl = baseUrl.search(/^\/\//) === 0 ? protocol + baseUrl : baseUrl;
-			baseUrlWithTimestamp = baseUrl + "?" + timestamp;
 
 			if(typeof window.SCAYT === 'undefined' || typeof window.SCAYT.TINYMCE !== 'function') {
 				// add onLoad callbacks for editors while SCAYT is loading
 				loadingHelper[editor.id] = callback;
 				loadingHelper.loadOrder.push(editor.id);
 
-				scriptLoader.add(baseUrlWithTimestamp);
+				scriptLoader.add(baseUrl);
 				scriptLoader.loadQueue(function(success) {
 					var editorName;
 
